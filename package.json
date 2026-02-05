@@ -1,0 +1,23 @@
+{
+  "name": "oncostage-ai",
+  "version": "1.0.0",
+  "description": "OncoStage AI - Monorepo for frontend and backend",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "install:frontend": "cd frontend && npm install",
+    "install:backend": "cd backend && npm install",
+    "install:all": "npm run install:frontend && npm run install:backend",
+    "dev:frontend": "cd frontend && npm run start",
+    "dev:backend": "cd backend && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "build:all": "npm run build:backend && npm run build:frontend"
+  },
+  "keywords": ["oncology", "AI", "monorepo"],
+  "author": "",
+  "license": "ISC"
+}
