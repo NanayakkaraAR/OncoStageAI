@@ -1,4 +1,4 @@
-import { Component, signal, output } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -22,14 +22,15 @@ export class LoginComponent {
   lastName = signal('');
   errorMessage = signal('');
   isSubmitting = signal(false);
-  
-  // Output for navigation
-  onNavigate = output<string>();
 
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
+
+  navigateToLanding(): void {
+    this.router.navigate(['/']);
+  }
 
   toggleForm(): void {
     this.showRegister.set(!this.showRegister());
