@@ -2,6 +2,8 @@ import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import pool from './config/database';
+import authRoutes from './routes/auth.routes';
+import protectedRoutes from './routes/protected.routes';
 
 dotenv.config();
 
@@ -17,6 +19,12 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'OncoStage AI API is running' });
 });
+
+// Auth routes
+app.use('/api/auth', authRoutes);
+
+// Protected routes
+app.use('/api', protectedRoutes);
 
 app.get('/api/health', async (req: Request, res: Response) => {
   try {

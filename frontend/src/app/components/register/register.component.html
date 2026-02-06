@@ -1,0 +1,89 @@
+<div class="register-container">
+  <div class="register-card">
+    <h2>Register for OncoStage AI</h2>
+    <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+      <div class="form-group">
+        <label for="firstName">First Name</label>
+        <input
+          type="text"
+          id="firstName"
+          name="firstName"
+          [(ngModel)]="formData.firstName"
+          required
+          placeholder="Enter your first name"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="lastName">Last Name</label>
+        <input
+          type="text"
+          id="lastName"
+          name="lastName"
+          [(ngModel)]="formData.lastName"
+          required
+          placeholder="Enter your last name"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          [(ngModel)]="formData.email"
+          required
+          email
+          placeholder="Enter your email"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          [(ngModel)]="formData.password"
+          required
+          minlength="6"
+          placeholder="Enter your password (min 6 characters)"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="role">Register as</label>
+        <select
+          id="role"
+          name="role"
+          [(ngModel)]="formData.role"
+          required
+        >
+          <option value="PATIENT">Patient</option>
+          <option value="DOCTOR">Doctor</option>
+        </select>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+
+      <div *ngIf="successMessage" class="success-message">
+        {{ successMessage }}
+      </div>
+
+      <button 
+        type="submit" 
+        class="btn-primary" 
+        [disabled]="!registerForm.valid || loading"
+      >
+        {{ loading ? 'Registering...' : 'Register' }}
+      </button>
+    </form>
+
+    <div class="login-link">
+      Already have an account? <a routerLink="/login">Login here</a>
+    </div>
+  </div>
+</div>

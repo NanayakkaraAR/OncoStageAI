@@ -1,0 +1,195 @@
+<div class="login-container">
+  <!-- Back to Home -->
+  <button 
+    (click)="onNavigate.emit('landing')"
+    class="back-button">
+    ← Back to Home
+  </button>
+
+  <div class="login-wrapper">
+    <!-- Logo -->
+    <div class="logo-section">
+      <div class="logo-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+      </div>
+      <h1>{{ showRegister() ? 'Create Account' : 'Welcome Back' }}</h1>
+      <p>{{ showRegister() ? 'Register to get started' : 'Sign in to access your account' }}</p>
+    </div>
+
+    <!-- Login Form -->
+    <div class="form-card">
+      <!-- Error Message -->
+      @if (errorMessage()) {
+        <div class="error-message" style="background-color: #fee; border: 1px solid #fcc; color: #c33; padding: 12px; border-radius: 6px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <form (ngSubmit)="showRegister() ? handleRegister() : handleSubmit()" #loginForm="ngForm">
+        <!-- Role Selection -->
+        <div class="form-group">
+          <label class="form-label">Select Role</label>
+          <div class="role-grid">
+            <button
+              type="button"
+              (click)="role.set('patient')"
+              [class.active]="role() === 'patient'"
+              [class.patient-active]="role() === 'patient'"
+              class="role-button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <div>Patient</div>
+            </button>
+            <button
+              type="button"
+              (click)="role.set('doctor')"
+              [class.active]="role() === 'doctor'"
+              [class.doctor-active]="role() === 'doctor'"
+              class="role-button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              <div>Doctor</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- First Name (Register only) -->
+        @if (showRegister()) {
+          <div class="form-group">
+            <label for="firstName" class="form-label">First Name</label>
+            <div class="input-wrapper">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <input
+                type="text"
+                id="firstName"
+                [ngModel]="firstName()"
+                (ngModelChange)="firstName.set($event)"
+                name="firstName"
+                placeholder="John"
+                class="form-input"
+                required />
+            </div>
+          </div>
+        }
+
+        <!-- Last Name (Register only) -->
+        @if (showRegister()) {
+          <div class="form-group">
+            <label for="lastName" class="form-label">Last Name</label>
+            <div class="input-wrapper">
+              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <input
+                type="text"
+                id="lastName"
+                [ngModel]="lastName()"
+                (ngModelChange)="lastName.set($event)"
+                name="lastName"
+                placeholder="Doe"
+                class="form-input"
+                required />
+            </div>
+          </div>
+        }
+
+        <!-- Email -->
+        <div class="form-group">
+          <label for="email" class="form-label">Email Address</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+            </svg>
+            <input
+              type="email"
+              id="email"
+              [ngModel]="email()"
+              (ngModelChange)="email.set($event)"
+              name="email"
+              placeholder="your.email@example.com"
+              class="form-input"
+              required />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <input
+              type="password"
+              id="password"
+              [ngModel]="password()"
+              (ngModelChange)="password.set($event)"
+              name="password"
+              placeholder="••••••••"
+              class="form-input"
+              required />
+          </div>
+          @if (showRegister()) {
+            <div style="font-size: 12px; color: #666; margin-top: 8px; padding-left: 4px;">
+              Must have: 8+ chars, uppercase, lowercase, number, special char (!@#$...)
+            </div>
+          }
+        </div>
+
+        <!-- Forgot Password (Login only) -->
+        @if (!showRegister()) {
+          <div class="forgot-password">
+            <button type="button" class="forgot-link">
+              Forgot Password?
+            </button>
+          </div>
+        }
+
+        <!-- Submit Button -->
+        <button type="submit" class="submit-button" [disabled]="isSubmitting()">
+          @if (isSubmitting()) {
+            <span class="spinner" style="border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block; margin-right: 8px;"></span>
+            {{ showRegister() ? 'Creating Account...' : 'Signing In...' }}
+          } @else {
+            {{ showRegister() ? 'Create Account' : 'Sign In' }}
+          }
+        </button>
+        
+        <!-- Toggle Form -->
+        <div class="form-footer" style="text-align: center; margin-top: 20px;">
+          <p style="color: #666; font-size: 14px;">
+            {{ showRegister() ? 'Already have an account?' : "Don't have an account?" }}
+            <button type="button" (click)="toggleForm()" class="toggle-link" style="background: none; border: none; color: #007bff; cursor: pointer; font-weight: 600; padding: 0 4px; text-decoration: underline;">
+              {{ showRegister() ? 'Sign In' : 'Register Now' }}
+            </button>
+          </p>
+        </div>
+      </form>
+    </div>
+
+   
+  </div>
+</div>
+
+<style>
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
