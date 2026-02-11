@@ -1,0 +1,112 @@
+<div class="doctor-selection-page">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-container">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+        </div>
+        <span class="logo-text">LungCare AI</span>
+      </div>
+      <button class="btn-logout" (click)="logout()">Logout</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">Select Your Doctor</h1>
+      <p class="page-description">Choose a doctor from the list below. Each doctor can have a maximum of 10 patients per week.</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading()" class="loading-container">
+      <div class="spinner"></div>
+      <p class="loading-text">Loading available doctors...</p>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage()" class="alert alert-error">
+      <div class="alert-content">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>{{ errorMessage() }}</span>
+      </div>
+      <button class="btn-retry" (click)="loadDoctors()">Retry</button>
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage()" class="alert alert-success">
+      <div class="alert-content">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span>{{ successMessage() }}</span>
+      </div>
+    </div>
+
+    <!-- Doctors Grid -->
+    <div *ngIf="!isLoading() && doctors().length > 0" class="doctors-grid">
+      <div 
+        *ngFor="let doctor of doctors()" 
+        class="doctor-card"
+        [class.unavailable]="!doctor.isAvailable"
+        [class.selected]="selectedDoctorId() === doctor.id"
+        [class.disabled]="isSubmitting()"
+      >
+        <div class="doctor-header">
+          <div class="doctor-avatar">
+            <span>{{ doctor.firstName.charAt(0) }}{{ doctor.lastName.charAt(0) }}</span>
+          </div>
+          <div class="availability-badge">
+            <span class="badge" [class.badge-available]="doctor.isAvailable" [class.badge-full]="!doctor.isAvailable">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              {{ doctor.availableSlots }} / 10 slots
+            </span>
+          </div>
+        </div>
+        
+        <div class="doctor-info">
+          <h3 class="doctor-name">Dr. {{ doctor.fullName }}</h3>
+          <p class="doctor-email">{{ doctor.email }}</p>
+        </div>
+
+        <button 
+          class="btn-select"
+          [disabled]="!doctor.isAvailable || isSubmitting()"
+          (click)="selectDoctor(doctor.id)"
+        >
+          <svg *ngIf="selectedDoctorId() !== doctor.id || !isSubmitting()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <span *ngIf="selectedDoctorId() === doctor.id && isSubmitting()">Assigning...</span>
+          <span *ngIf="selectedDoctorId() !== doctor.id || !isSubmitting()">
+            {{ doctor.isAvailable ? 'Select Doctor' : 'Not Available' }}
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- No Doctors Available -->
+    <div *ngIf="!isLoading() && doctors().length === 0" class="empty-state">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <p class="empty-text">No doctors are currently available. Please try again later.</p>
+    </div>
+  </main>
+</div>

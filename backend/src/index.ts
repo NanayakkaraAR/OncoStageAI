@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import pool from './config/database';
 import authRoutes from './routes/auth.routes';
 import protectedRoutes from './routes/protected.routes';
+import doctorRoutes from './routes/doctor.routes';
 
 dotenv.config();
 
@@ -22,6 +23,9 @@ app.get('/', (req: Request, res: Response) => {
 
 // Auth routes
 app.use('/api/auth', authRoutes);
+
+// Doctor routes
+app.use('/api/doctors', doctorRoutes);
 
 // Protected routes
 app.use('/api', protectedRoutes);

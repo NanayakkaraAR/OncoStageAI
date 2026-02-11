@@ -79,6 +79,19 @@ export class AuthService {
     return user ? roles.includes(user.role) : false;
   }
 
+  // Doctor-related methods
+  getAvailableDoctors(): Observable<any> {
+    return this.http.get('http://localhost:3000/api/doctors/available');
+  }
+
+  assignToDoctor(doctorId: number): Observable<any> {
+    return this.http.post('http://localhost:3000/api/doctors/assign', { doctorId });
+  }
+
+  getMyDoctorAssignment(): Observable<any> {
+    return this.http.get('http://localhost:3000/api/doctors/my-assignment');
+  }
+
   private setSession(authResponse: AuthResponse): void {
     localStorage.setItem('token', authResponse.token);
     localStorage.setItem('currentUser', JSON.stringify(authResponse.user));
