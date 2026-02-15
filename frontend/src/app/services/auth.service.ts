@@ -57,6 +57,31 @@ export class AuthService {
     return this.http.get<{ user: User }>(`${this.apiUrl}/profile`);
   }
 
+  updateProfile(data: Partial<User>): Observable<{ message: string; user: User }> {
+    return this.http.put<{ message: string; user: User }>(`${this.apiUrl}/profile`, data).pipe(
+      tap(response => {
+        // Update local storage and subject with newest user data
+        const current = this.getCurrentUser();
+        const updated = { ...(current || {}), ...(response.user as any) } as User;
+        localStorage.setItem('currentUser', JSON.stringify(updated));
+        this.currentUserSubject.next(updated);
+      })
+    );
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/change-password`, { currentPassword, newPassword });
+  }
+
+  exportProfileData(): Observable<{ data: any }> {
+    return this.http.get<{ data: any }>(`${this.apiUrl}/profile/export`);
+  }
+
+  deleteAccount(currentPassword: string): Observable<{ message: string }> {
+    // Use HttpClient.request to send a DELETE with a body
+    return this.http.request<{ message: string }>('delete', `${this.apiUrl}/profile`, { body: { currentPassword } });
+  }
+
   getToken(): string | null {
     return localStorage.getItem('token');
   }

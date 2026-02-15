@@ -6,6 +6,7 @@ import { PatientDashboardComponent } from './components/patient-dashboard/patien
 import { DoctorDashboardComponent } from './components/doctor-dashboard/doctor-dashboard.component';
 import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard.component';
 import { DoctorSelectionComponent } from './components/doctor-selection/doctor-selection.component';
+import { SettingsComponent } from './components/settings/settings.component';
 import { authGuard, roleGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -32,5 +33,6 @@ export const routes: Routes = [
     component: AdminDashboardComponent,
     canActivate: [roleGuard(['ADMIN'])]
   },
+  { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: '/login' }
 ];

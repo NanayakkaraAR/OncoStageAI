@@ -15,6 +15,7 @@ const getWeekStart = (): Date => {
 export const getAvailableDoctors = async (req: AuthRequest, res: Response) => {
   try {
     const weekStart = getWeekStart();
+    console.log('getAvailableDoctors - Week start:', weekStart.toISOString());
 
     // Get all active doctors
     const doctors = await prisma.user.findMany({
@@ -37,11 +38,15 @@ export const getAvailableDoctors = async (req: AuthRequest, res: Response) => {
         },
       },
     });
+    
+    console.log(`Found ${doctors.length} doctors`);
 
     // Calculate available slots for each doctor
     const doctorsWithAvailability = doctors.map(doctor => {
       const currentPatientCount = doctor.doctorAssignments.length;
       const availableSlots = Math.max(0, 10 - currentPatientCount);
+      
+      console.log(`Dr. ${doctor.firstName} ${doctor.lastName}: ${currentPatientCount}/10 patients`);
       
       return {
         id: doctor.id,
