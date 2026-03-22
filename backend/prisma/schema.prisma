@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,40 +6,36 @@ datasource db {
   provider = "postgresql"
 }
 
-enum UserRole {
-  PATIENT
-  DOCTOR
-  ADMIN
-}
-
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  password  String
-  firstName String
-  lastName  String
-  role      UserRole @default(PATIENT)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  doctorAssignments DoctorPatientAssignment[] @relation("DoctorAssignments")
-  patientAssignment DoctorPatientAssignment?  @relation("PatientAssignment")
+  id                                                                     Int                          @id @default(autoincrement())
+  email                                                                  String                       @unique
+  password                                                               String
+  firstName                                                              String
+  lastName                                                               String
+  role                                                                   UserRole                     @default(PATIENT)
+  isActive                                                               Boolean                      @default(true)
+  createdAt                                                              DateTime                     @default(now())
+  updatedAt                                                              DateTime                     @updatedAt
+  doctor_patient_assignments_doctor_patient_assignments_doctorIdTousers  doctor_patient_assignments[] @relation("doctor_patient_assignments_doctorIdTousers")
+  doctor_patient_assignments_doctor_patient_assignments_patientIdTousers doctor_patient_assignments?  @relation("doctor_patient_assignments_patientIdTousers")
 
   @@map("users")
 }
 
-model DoctorPatientAssignment {
-  id               Int      @id @default(autoincrement())
-  doctorId         Int
-  patientId        Int      @unique
-  assignedAt       DateTime @default(now())
-  weekStartDate    DateTime // Start of the week when assigned (Monday)
-  
-  doctor  User @relation("DoctorAssignments", fields: [doctorId], references: [id], onDelete: Cascade)
-  patient User @relation("PatientAssignment", fields: [patientId], references: [id], onDelete: Cascade)
+model doctor_patient_assignments {
+  id                                                Int      @id @default(autoincrement())
+  doctorId                                          Int
+  patientId                                         Int      @unique
+  assignedAt                                        DateTime @default(now())
+  weekStartDate                                     DateTime
+  users_doctor_patient_assignments_doctorIdTousers  User     @relation("doctor_patient_assignments_doctorIdTousers", fields: [doctorId], references: [id], onDelete: Cascade)
+  users_doctor_patient_assignments_patientIdTousers User     @relation("doctor_patient_assignments_patientIdTousers", fields: [patientId], references: [id], onDelete: Cascade)
 
   @@index([doctorId, weekStartDate])
-  @@map("doctor_patient_assignments")
+}
+
+enum UserRole {
+  PATIENT
+  DOCTOR
+  ADMIN
 }

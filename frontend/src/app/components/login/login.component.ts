@@ -66,8 +66,7 @@ export class LoginComponent {
         } else if (user.role === 'DOCTOR') {
           this.router.navigate(['/doctor/dashboard']);
         } else {
-          // Patients go to doctor selection page
-          this.router.navigate(['/patient/select-doctor']);
+          this.router.navigate(['/patient/doctors']);
         }
       },
       error: (error) => {
@@ -103,8 +102,7 @@ export class LoginComponent {
         if (this.role() === 'doctor') {
           this.router.navigate(['/doctor/dashboard']);
         } else {
-          // Patients go to doctor selection page
-          this.router.navigate(['/patient/select-doctor']);
+          this.router.navigate(['/patient/doctors']);
         }
       },
       error: (error) => {

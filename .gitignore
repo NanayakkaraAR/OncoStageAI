@@ -1,0 +1,15 @@
+# System files
+.DS_Store
+
+# Node modules
+node_modules/
+
+# Python / ML Service
+ml_service/venv/
+venv/
+__pycache__/
+*.pyc
+*.pkl
+
+# Potential Data files (Uncomment if dataset should not be committed)
+# *.csv

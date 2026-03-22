@@ -29,7 +29,8 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
       return true;
     }
 
-    router.navigate(['/unauthorized']);
+    // Redirect back to login
+    router.navigate(['/login']);
     return false;
   };
 };
