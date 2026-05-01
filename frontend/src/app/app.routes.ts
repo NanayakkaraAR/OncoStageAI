@@ -5,24 +5,30 @@ import { RegisterComponent } from './components/register/register.component';
 import { PatientDashboardComponent } from './components/patient-dashboard/patient-dashboard.component';
 import { DoctorDashboardComponent } from './components/doctor-dashboard/doctor-dashboard.component';
 import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard.component';
+import { DoctorListComponent } from './components/doctor-list/doctor-list.component';
 import { authGuard, roleGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
-  { 
-    path: 'patient/dashboard', 
+  {
+    path: 'patient/doctors',
+    component: DoctorListComponent,
+    canActivate: [roleGuard(['PATIENT'])]
+  },
+  {
+    path: 'patient/dashboard',
     component: PatientDashboardComponent,
     canActivate: [roleGuard(['PATIENT'])]
   },
-  { 
-    path: 'doctor/dashboard', 
+  {
+    path: 'doctor/dashboard',
     component: DoctorDashboardComponent,
     canActivate: [roleGuard(['DOCTOR'])]
   },
-  { 
-    path: 'admin/dashboard', 
+  {
+    path: 'admin/dashboard',
     component: AdminDashboardComponent,
     canActivate: [roleGuard(['ADMIN'])]
   },

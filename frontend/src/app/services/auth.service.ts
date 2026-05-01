@@ -66,7 +66,16 @@ export class AuthService {
   }
 
   getCurrentUser(): User | null {
-    return this.currentUserSubject.value;
+    const subjectValue = this.currentUserSubject.value;
+    if (subjectValue) return subjectValue;
+    // fallback: re-read from localStorage (in case subject lost state during navigation)
+    const stored = localStorage.getItem('currentUser');
+    if (stored) {
+      const parsed = JSON.parse(stored) as User;
+      this.currentUserSubject.next(parsed);
+      return parsed;
+    }
+    return null;
   }
 
   hasRole(role: string): boolean {

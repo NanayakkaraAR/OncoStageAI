@@ -8,21 +8,18 @@ export const register = async (req: Request, res: Response) => {
   try {
     const { email, password, firstName, lastName, role } = req.body;
 
-    // Validate required fields
     if (!email || !password || !firstName || !lastName) {
       return res.status(400).json({ 
         message: 'Email, password, firstName, and lastName are required' 
       });
     }
 
-    // Validate doctor email domain
     if (role === 'DOCTOR' && !email.endsWith('@students.nsbm.ac.lk')) {
       return res.status(400).json({ 
         message: 'Doctor accounts must use @students.nsbm.ac.lk email domain' 
       });
     }
 
-    // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -31,10 +28,8 @@ export const register = async (req: Request, res: Response) => {
       return res.status(409).json({ message: 'User already exists with this email' });
     }
 
-    // Hash password
     const hashedPassword = await hashPassword(password);
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         email,
@@ -45,14 +40,12 @@ export const register = async (req: Request, res: Response) => {
       },
     });
 
-    // Generate token
     const token = generateToken({
       id: user.id,
       email: user.email,
       role: user.role,
     });
 
-    // Return user without password
     const { password: _, ...userWithoutPassword } = user;
 
     res.status(201).json({
@@ -70,12 +63,9 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    // Validate required fields
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
     }
-
-    // Find user
     const user = await prisma.user.findUnique({
       where: { email },
     });
@@ -84,33 +74,28 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Validate doctor email domain
     if (user.role === 'DOCTOR' && !email.endsWith('@students.nsbm.ac.lk')) {
       return res.status(403).json({ 
         message: 'Doctor accounts must use @students.nsbm.ac.lk email domain' 
       });
     }
 
-    // Check if user is active
     if (!user.isActive) {
       return res.status(403).json({ message: 'Account is deactivated' });
     }
 
-    // Verify password
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Generate token
     const token = generateToken({
       id: user.id,
       email: user.email,
       role: user.role,
     });
 
-    // Return user without password
     const { password: _, ...userWithoutPassword } = user;
 
     res.status(200).json({

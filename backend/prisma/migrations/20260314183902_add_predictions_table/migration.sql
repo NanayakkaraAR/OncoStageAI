@@ -1,0 +1,83 @@
+CREATE TYPE "UserRole" AS ENUM ('PATIENT', 'DOCTOR', 'ADMIN');
+
+CREATE TABLE "users" (
+    "id" SERIAL NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "firstName" TEXT NOT NULL,
+    "lastName" TEXT NOT NULL,
+    "role" "UserRole" NOT NULL DEFAULT 'PATIENT',
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE "predictions" (
+    "id" SERIAL NOT NULL,
+    "patientId" INTEGER NOT NULL,
+    "doctorId" INTEGER NOT NULL,
+    "result" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "Age" DOUBLE PRECISION NOT NULL,
+    "Gender" DOUBLE PRECISION NOT NULL,
+    "Country" DOUBLE PRECISION NOT NULL,
+    "Smoking_History" DOUBLE PRECISION NOT NULL,
+    "Tumor_Size_mm" DOUBLE PRECISION NOT NULL,
+    "Mutation_Status" DOUBLE PRECISION NOT NULL,
+    "Treatment_Type" DOUBLE PRECISION NOT NULL,
+    "Survival_Months" DOUBLE PRECISION NOT NULL,
+    "Smoking_Pack_Years" DOUBLE PRECISION NOT NULL,
+    "Biomarker_Status" DOUBLE PRECISION NOT NULL,
+    "ECOG_Performance_Status" DOUBLE PRECISION NOT NULL,
+    "Hemoglobin_Level" DOUBLE PRECISION NOT NULL,
+    "White_Blood_Cell_Count" DOUBLE PRECISION NOT NULL,
+    "Platelet_Count" DOUBLE PRECISION NOT NULL,
+    "Calcium_Level" DOUBLE PRECISION NOT NULL,
+    "Albumin_Level" DOUBLE PRECISION NOT NULL,
+    "LDH_Level" DOUBLE PRECISION NOT NULL,
+    "Creatinine_Level" DOUBLE PRECISION NOT NULL,
+    "Glucose_Level" DOUBLE PRECISION NOT NULL,
+    "Cholesterol_Level" DOUBLE PRECISION NOT NULL,
+    "Bilirubin_Level" DOUBLE PRECISION NOT NULL,
+    "AST_Level" DOUBLE PRECISION NOT NULL,
+    "ALT_Level" DOUBLE PRECISION NOT NULL,
+    "Sodium_Level" DOUBLE PRECISION NOT NULL,
+    "Potassium_Level" DOUBLE PRECISION NOT NULL,
+    "Chloride_Level" DOUBLE PRECISION NOT NULL,
+    "Urea_Level" DOUBLE PRECISION NOT NULL,
+    "Uric_Acid_Level" DOUBLE PRECISION NOT NULL,
+    "Magnesium_Level" DOUBLE PRECISION NOT NULL,
+    "Phosphorus_Level" DOUBLE PRECISION NOT NULL,
+    "Iron_Level" DOUBLE PRECISION NOT NULL,
+    "Ferritin_Level" DOUBLE PRECISION NOT NULL,
+    "Transferrin_Level" DOUBLE PRECISION NOT NULL,
+    "CRP_Level" DOUBLE PRECISION NOT NULL,
+    "ESR_Level" DOUBLE PRECISION NOT NULL,
+    "Procalcitonin_Level" DOUBLE PRECISION NOT NULL,
+    "Vitamin_D_Level" DOUBLE PRECISION NOT NULL,
+    "Vitamin_B12_Level" DOUBLE PRECISION NOT NULL,
+    "Folate_Level" DOUBLE PRECISION NOT NULL,
+    "TSH_Level" DOUBLE PRECISION NOT NULL,
+    "Free_T3_Level" DOUBLE PRECISION NOT NULL,
+    "Free_T4_Level" DOUBLE PRECISION NOT NULL,
+    "Cortisol_Level" DOUBLE PRECISION NOT NULL,
+    "Insulin_Level" DOUBLE PRECISION NOT NULL,
+    "HbA1c_Level" DOUBLE PRECISION NOT NULL,
+    "Triglycerides_Level" DOUBLE PRECISION NOT NULL,
+    "HDL_Level" DOUBLE PRECISION NOT NULL,
+    "LDL_Level" DOUBLE PRECISION NOT NULL,
+    "Total_Protein_Level" DOUBLE PRECISION NOT NULL,
+    "Globulin_Level" DOUBLE PRECISION NOT NULL,
+    "Alkaline_Phosphatase_Level" DOUBLE PRECISION NOT NULL,
+    "GGT_Level" DOUBLE PRECISION NOT NULL,
+
+    CONSTRAINT "predictions_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+
+ALTER TABLE "predictions" ADD CONSTRAINT "predictions_patientId_fkey" FOREIGN KEY ("patientId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+ALTER TABLE "predictions" ADD CONSTRAINT "predictions_doctorId_fkey" FOREIGN KEY ("doctorId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

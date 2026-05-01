@@ -44,7 +44,7 @@
 }
 
 .logo-icon {
-  background: linear-gradient(135deg, #14b8a6 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-green) 100%);
   width: 64px;
   height: 64px;
   border-radius: 16px;
@@ -52,6 +52,7 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
 }
 
 .logo-icon svg {
@@ -62,13 +63,14 @@
 
 .logo-section h1 {
   font-size: 28px;
-  font-weight: 700;
-  color: #1a202c;
+  font-weight: 800;
+  color: var(--text-dark);
   margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
 }
 
 .logo-section p {
-  color: #718096;
+  color: var(--text-muted);
   margin: 0;
   font-size: 16px;
 }
@@ -86,8 +88,8 @@
 
 .form-label {
   display: block;
-  font-weight: 600;
-  color: #374151;
+  font-weight: 700;
+  color: var(--text-dark);
   margin-bottom: 8px;
   font-size: 14px;
 }
@@ -100,29 +102,29 @@
 }
 
 .role-button {
-  background: white;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
+  background: var(--bg-white);
+  border: 2px solid var(--border-light);
+  border-radius: 12px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 500;
-  color: #6b7280;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
 .role-button:hover {
-  border-color: #d1d5db;
-  background: #f9fafb;
+  border-color: #cbd5e1;
+  background: #f1f5f9;
 }
 
 .role-button.active {
-  border-color: #14b8a6;
-  background: white;
-  color: #14b8a6;
+  border-color: var(--primary-blue);
+  background: #f0f9ff;
+  color: var(--primary-blue);
 }
 
 .role-button svg {
@@ -139,29 +141,30 @@
 .input-icon {
   position: absolute;
   left: 16px;
-  color: #9ca3af;
+  color: var(--text-muted);
   z-index: 1;
 }
 
 .form-input {
   width: 100%;
   padding: 16px 16px 16px 48px;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
   font-size: 16px;
-  background: white;
+  background: var(--bg-white);
   transition: all 0.2s ease;
   outline: none;
+  color: var(--text-dark);
 }
 
 .form-input:focus {
-  border-color: #14b8a6;
-  background: white;
-  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.05);
+  border-color: var(--primary-blue);
+  background: var(--bg-white);
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
 }
 
 .form-input::placeholder {
-  color: #9ca3af;
+  color: #94a3b8;
 }
 
 .forgot-password {
@@ -172,9 +175,9 @@
 .forgot-link {
   background: none;
   border: none;
-  color: #14b8a6;
+  color: var(--primary-blue);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   text-decoration: none;
 }
@@ -185,21 +188,23 @@
 
 .submit-button {
   width: 100%;
-  background: #14b8a6;
+  background: linear-gradient(135deg, var(--primary-blue), var(--primary-green));
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 16px;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
 }
 
 .submit-button:hover {
-  background: #0d9488;
   transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(14, 165, 233, 0.35);
+  filter: brightness(1.05);
 }
 
 .submit-button:active {
@@ -207,9 +212,10 @@
 }
 
 .submit-button:disabled {
-  background: #9ca3af;
+  background: #cbd5e1;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .register-section {
@@ -218,15 +224,15 @@
 }
 
 .register-text {
-  color: #6b7280;
+  color: var(--text-muted);
   font-size: 14px;
 }
 
 .register-link {
   background: none;
   border: none;
-  color: #14b8a6;
-  font-weight: 600;
+  color: var(--primary-blue);
+  font-weight: 700;
   cursor: pointer;
   text-decoration: none;
   font-size: 14px;
