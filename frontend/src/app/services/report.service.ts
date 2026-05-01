@@ -9,6 +9,7 @@ export interface MedicalReport {
   fileName: string;
   filePath: string;
   fileType: string;
+  status: string;
   createdAt: string;
   doctor?: { firstName: string; lastName: string };
   patient?: { firstName: string; lastName: string };
@@ -56,4 +57,13 @@ export class ReportService {
   getReportFile(reportId: number): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/reports/${reportId}/file`, { responseType: 'blob' });
   }
+
+  deleteReport(reportId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/reports/${reportId}`);
+  }
+
+  updateReportStatus(reportId: number, status: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/reports/${reportId}/status`, { status });
+  }
 }
+

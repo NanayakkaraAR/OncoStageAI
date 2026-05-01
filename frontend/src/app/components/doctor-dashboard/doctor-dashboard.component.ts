@@ -129,7 +129,7 @@ declare var JitsiMeetExternalAPI: any;
                 <span class="tag-yellow">{{ getPendingCount() }} cases</span>
               </div>
 
-              <div *ngIf="getPendingCount() === 0" class="empty-list">No pending reviews right now.</div>
+              <div *ngIf="getPendingCount() === 0 && getPendingReports().length === 0" class="empty-list">No pending reviews right now.</div>
 
               <!-- Case Row Cards -->
               <div class="case-card" *ngFor="let p of getPendingCases()">
@@ -147,16 +147,38 @@ declare var JitsiMeetExternalAPI: any;
                 </div>
                 <button class="btn-review" (click)="openReview(p)">Review Case</button>
               </div>
+
+              <!-- Pending Reports -->
+              <div class="case-card" *ngFor="let r of getPendingReports()" style="border-left: 4px solid #f97316;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="background: #fff7ed; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    </div>
+                    <div>
+                      <div style="font-weight: 600; color: #1e293b;">{{ r.fileName }}</div>
+                      <div style="font-size: 0.8rem; color: #64748b;">Report by: {{ r.patient?.firstName }} {{ r.patient?.lastName }}</div>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 8px;">
+                    <button class="btn-white-outline" style="width: auto; padding: 6px 16px;" (click)="viewReport(r)">View</button>
+                    <button class="btn-review" style="width: auto; padding: 6px 16px; height: auto;" (click)="assessFromDashboard(r)">Assess & Auto-fill</button>
+                    <button class="btn-delete-small" (click)="deleteReport(r)" title="Delete Report">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- SHARED REPORTS (GLOBAL OR RECENT) -->
-            <div class="list-container" style="margin-top: 32px;" *ngIf="patientReports.length > 0">
+            <div class="list-container" style="margin-top: 32px;" *ngIf="getReviewedReports().length > 0">
               <div class="list-title" style="display:flex; justify-content:space-between;">
-                <span>Recently Shared Reports</span>
-                <span class="tag-blue">{{ patientReports.length }} new</span>
+                <span>Reviewed Reports</span>
+                <span class="tag-blue">{{ getReviewedReports().length }} total</span>
               </div>
               <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;">
-                <div *ngFor="let r of patientReports" class="case-card" style="padding: 16px;">
+                <div *ngFor="let r of getReviewedReports()" class="case-card" style="padding: 16px;">
                   <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; align-items: center; gap: 12px;">
                       <div style="background: #f0f9ff; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
@@ -170,6 +192,9 @@ declare var JitsiMeetExternalAPI: any;
                     <div style="display: flex; gap: 8px;">
                       <button class="btn-white-outline" style="width: auto; padding: 6px 16px;" (click)="viewReport(r)">View</button>
                       <button class="btn-review" style="width: auto; padding: 6px 16px; height: auto;" (click)="assessFromDashboard(r)">Assess & Auto-fill</button>
+                      <button class="btn-delete-small" (click)="deleteReport(r)" title="Delete Report">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -570,25 +595,6 @@ declare var JitsiMeetExternalAPI: any;
         </div>
 
         <div class="assessment-container" style="padding: 0 40px 40px;">
-           <!-- Shared Reports for Reference -->
-           <div class="form-card" style="margin-bottom: 24px; padding: 20px;" *ngIf="patientReports.length > 0">
-             <h4 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
-               Patient Shared Reports (Reference)
-             </h4>
-             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px;">
-               <div *ngFor="let r of patientReports" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-                 <div style="display: flex; align-items: center; gap: 10px;">
-                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                   <span style="font-size: 0.85rem; font-weight: 600; color: #334155;">{{ r.fileName }}</span>
-                 </div>
-                 <div style="display: flex; gap: 6px;">
-                   <button (click)="viewReport(r)" type="button" style="background: #fff; border: 1px solid #cbd5e1; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">View</button>
-                   <button (click)="autoFillFromReport(r)" type="button" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0ea5e9; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Auto-fill</button>
-                 </div>
-               </div>
-             </div>
-           </div>
 
            <div class="form-card" style="background:#fff; border-radius:16px; border:1px solid #e2e8f0; padding:32px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
               
@@ -876,6 +882,7 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   submittingAssessment = false;
   predictionResult: string | null = null;
   patientReports: MedicalReport[] = [];
+  selectedReportForAssessment: MedicalReport | null = null;
 
   fieldGroups: any[] = [
     {
@@ -1086,6 +1093,14 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     return Math.floor(Math.random() * (99 - 85 + 1) + 85);
   }
 
+  getPendingReports(): MedicalReport[] {
+    return this.patientReports.filter(r => !r.status || r.status === 'Pending');
+  }
+
+  getReviewedReports(): MedicalReport[] {
+    return this.patientReports.filter(r => r.status === 'Reviewed');
+  }
+
   getGenderStr(id: number): string {
     // Deterministic mock based on patient ID
     return id % 2 === 0 ? 'Female' : 'Male';
@@ -1290,6 +1305,7 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     });
   }
   assessFromDashboard(report: MedicalReport) {
+    this.selectedReportForAssessment = report;
     if (report.patient) {
       this.selectedPatient = { ...report.patient, id: report.patientId };
       this.loadPatientReports(); // Refresh for the assessment form reference
@@ -1367,9 +1383,33 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     this.predictionService.predict(payload).subscribe({
       next: (res) => {
         this.predictionResult = res.prediction;
+        const newPredictionId = res.predictionId;
         this.submittingAssessment = false;
+        
+        // Mark report as reviewed if applicable
+        if (this.selectedReportForAssessment) {
+          this.reportService.updateReportStatus(this.selectedReportForAssessment.id, 'Reviewed').subscribe({
+            next: () => {
+              this.loadAllReports();
+              this.selectedReportForAssessment = null;
+            }
+          });
+        }
+
+        // Refresh predictions and navigate to the review page for this specific case
+        this.predictionService.getDoctorPredictions().subscribe({
+          next: (predsRes) => {
+            this.predictions = predsRes;
+            const newPred = this.predictions.find((p: any) => p.id === newPredictionId);
+            if (newPred) {
+              this.openReview(newPred);
+            } else {
+              this.view = 'review'; // Fallback
+            }
+          }
+        });
+
         alert(`Assessment completed! The result "${this.predictionResult}" has been sent directly to ${this.selectedPatient.firstName}'s dashboard.`);
-        this.loadPredictions();
       },
       error: (err) => {
         this.submittingAssessment = false;
@@ -1380,6 +1420,7 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   }
 
   autoFillFromReport(report: MedicalReport) {
+    this.selectedReportForAssessment = report;
     this.openAssessmentForm();
     
     this.reportService.parseReport(report.id).subscribe({
@@ -1410,6 +1451,22 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  deleteReport(report: MedicalReport): void {
+    if (confirm(`Are you sure you want to delete the report "${report.fileName}"? This action cannot be undone.`)) {
+      this.reportService.deleteReport(report.id).subscribe({
+        next: () => {
+          this.patientReports = this.patientReports.filter(r => r.id !== report.id);
+          alert('Report deleted successfully.');
+        },
+        error: (err) => {
+          console.error('Delete failed', err);
+          alert('Failed to delete report. Please try again.');
+        }
+      });
+    }
+  }
+
 
 
   onInputFocus(event: any) {

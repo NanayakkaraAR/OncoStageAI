@@ -115,15 +115,17 @@ model Prediction {
 }
 
 model Report {
-  id        Int      @id @default(autoincrement())
-  patientId Int
-  doctorId  Int
-  fileName  String
-  filePath  String
-  fileType  String
-  createdAt DateTime @default(now())
-  doctor    User     @relation("DoctorReports", fields: [doctorId], references: [id])
-  patient   User     @relation("PatientReports", fields: [patientId], references: [id])
+  id          Int      @id @default(autoincrement())
+  patientId   Int
+  doctorId    Int
+  fileName    String
+  filePath    String
+  fileType    String
+  fileContent Bytes?
+  status      String   @default("Pending")
+  createdAt   DateTime @default(now())
+  doctor      User     @relation("DoctorReports", fields: [doctorId], references: [id])
+  patient     User     @relation("PatientReports", fields: [patientId], references: [id])
 
   @@map("reports")
 }
