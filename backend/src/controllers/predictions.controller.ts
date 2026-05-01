@@ -2,7 +2,92 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
 import prisma from '../config/prisma';
 
-// ── GET /api/protected/doctors ──────────────────────────────────────────────
+export const getPatientPredictions = async (req: AuthRequest, res: Response) => {
+  try {
+    const patientId = req.user!.id;
+
+    const predictions = await prisma.prediction.findMany({
+      where: { patientId },
+      include: {
+        doctor: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const total = predictions.length;
+    const completed = total; 
+    const pending = 0;       
+
+    res.json({ success: true, data: { predictions, stats: { total, completed, pending } } });
+  } catch (error) {
+    console.error('Patient predictions error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch patient predictions' });
+  }
+};
+
+export const getAssignedDoctor = async (req: AuthRequest, res: Response) => {
+  try {
+    const patientId = req.user!.id;
+
+    const rows = await prisma.$queryRaw<
+      { id: number; firstName: string; lastName: string; email: string }[]
+    >`
+      SELECT u.id, u."firstName", u."lastName", u.email,
+             (SELECT COUNT(*)::int FROM messages WHERE "senderId" = u.id AND "receiverId" = ${patientId} AND "isRead" = false) as "unreadCount"
+      FROM doctor_patient_assignments dpa
+      JOIN users u ON u.id = dpa."doctorId"
+      WHERE dpa."patientId" = ${patientId}
+      LIMIT 1
+    `;
+
+    if (!rows || rows.length === 0) {
+      return res.json({ success: true, data: null });
+    }
+
+    res.json({ success: true, data: rows[0] });
+  } catch (error) {
+    console.error('Get assigned doctor error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch assigned doctor' });
+  }
+};
+
+export const assignDoctor = async (req: AuthRequest, res: Response) => {
+  try {
+    const patientId = req.user!.id;
+    const { doctorId } = req.body;
+
+    if (!doctorId) {
+      return res.status(400).json({ success: false, error: 'doctorId is required' });
+    }
+
+    const now = new Date();
+    const day = now.getDay(); 
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    const weekStart = new Date(now.setDate(diff));
+    weekStart.setHours(0, 0, 0, 0);
+
+    await prisma.$executeRaw`
+      INSERT INTO doctor_patient_assignments ("doctorId", "patientId", "assignedAt", "weekStartDate")
+      VALUES (${Number(doctorId)}, ${patientId}, NOW(), ${weekStart})
+      ON CONFLICT ("patientId")
+      DO UPDATE SET "doctorId" = ${Number(doctorId)}, "assignedAt" = NOW(), "weekStartDate" = ${weekStart}
+    `;
+
+    const rows = await prisma.$queryRaw<
+      { id: number; firstName: string; lastName: string; email: string }[]
+    >`
+      SELECT id, "firstName", "lastName", email FROM users WHERE id = ${Number(doctorId)} LIMIT 1
+    `;
+
+    res.json({ success: true, data: rows[0] ?? null });
+  } catch (error) {
+    console.error('Assign doctor error:', error);
+    res.status(500).json({ success: false, error: 'Failed to assign doctor' });
+  }
+};
+
 export const getDoctors = async (req: AuthRequest, res: Response) => {
   try {
     const doctors = await prisma.user.findMany({
@@ -22,17 +107,20 @@ export const getDoctors = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// ── POST /api/protected/predict ─────────────────────────────────────────────
 export const submitPrediction = async (req: AuthRequest, res: Response) => {
   try {
-    const patientId = req.user!.id;
-    const { doctorId, ...featureData } = req.body;
+    let patientId = req.user!.id;
+    const { doctorId, patientId: bodyPatientId, ...featureData } = req.body;
+
+    // If doctor is submitting, use patientId from body
+    if (req.user!.role === 'DOCTOR' && bodyPatientId) {
+      patientId = Number(bodyPatientId);
+    }
 
     if (!doctorId) {
       return res.status(400).json({ success: false, error: 'doctorId is required' });
     }
 
-    // Forward features to ML service
     const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000/predict';
     const mlResponse = await fetch(mlServiceUrl, {
       method: 'POST',
@@ -46,12 +134,12 @@ export const submitPrediction = async (req: AuthRequest, res: Response) => {
 
     const mlResult: { prediction: string; status: string } = await mlResponse.json() as any;
 
-    // Persist the prediction
     const prediction = await prisma.prediction.create({
       data: {
         patientId,
         doctorId: Number(doctorId),
         result: mlResult.prediction,
+        status: req.user!.role === 'DOCTOR' ? 'Reviewed' : 'Pending Review',
         Age: featureData.Age ?? 0,
         Gender: featureData.Gender ?? 0,
         Country: featureData.Country ?? 0,
@@ -117,7 +205,6 @@ export const submitPrediction = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// ── GET /api/protected/doctor/predictions ───────────────────────────────────
 export const getDoctorPredictions = async (req: AuthRequest, res: Response) => {
   try {
     const doctorId = req.user!.id;
@@ -136,5 +223,47 @@ export const getDoctorPredictions = async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('Doctor predictions error:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch predictions' });
+  }
+};
+
+export const updatePredictionStatus = async (req: AuthRequest, res: Response) => {
+  try {
+    const predictionId = Number(req.params.id);
+    const { status } = req.body;
+
+    if (!predictionId || !status) {
+      return res.status(400).json({ success: false, error: 'Prediction ID and status are required' });
+    }
+
+    const updated = await prisma.prediction.update({
+      where: { id: predictionId },
+      data: { status }
+    });
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    console.error('Update prediction status error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update status' });
+  }
+};
+
+export const getDoctorPatients = async (req: AuthRequest, res: Response) => {
+  try {
+    const doctorId = req.user!.id;
+
+    const rows = await prisma.$queryRaw<
+      { id: number; firstName: string; lastName: string; email: string }[]
+    >`
+      SELECT u.id, u."firstName", u."lastName", u.email,
+             (SELECT COUNT(*)::int FROM messages WHERE "senderId" = u.id AND "receiverId" = ${doctorId} AND "isRead" = false) as "unreadCount"
+      FROM doctor_patient_assignments dpa
+      JOIN users u ON u.id = dpa."patientId"
+      WHERE dpa."doctorId" = ${doctorId}
+    `;
+
+    res.json({ success: true, data: rows });
+  } catch (error) {
+    console.error('Get doctor patients error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch patients' });
   }
 };

@@ -16,10 +16,22 @@ model User {
   isActive                                                               Boolean                      @default(true)
   createdAt                                                              DateTime                     @default(now())
   updatedAt                                                              DateTime                     @updatedAt
+  address                                                                String?
+  doctorFeedback                                                         Boolean                      @default(true)
+  emailNotifications                                                     Boolean                      @default(true)
+  phoneNumber                                                            String?
+  predictionAlerts                                                       Boolean                      @default(true)
+  smsNotifications                                                       Boolean                      @default(false)
+  systemUpdates                                                          Boolean                      @default(false)
+  weeklyReports                                                          Boolean                      @default(true)
   doctor_patient_assignments_doctor_patient_assignments_doctorIdTousers  doctor_patient_assignments[] @relation("doctor_patient_assignments_doctorIdTousers")
   doctor_patient_assignments_doctor_patient_assignments_patientIdTousers doctor_patient_assignments?  @relation("doctor_patient_assignments_patientIdTousers")
-  patientPredictions                                                     Prediction[]                 @relation("PatientPredictions")
+  receivedMessages                                                       Message[]                    @relation("ReceivedMessages")
+  sentMessages                                                           Message[]                    @relation("SentMessages")
   doctorPredictions                                                      Prediction[]                 @relation("DoctorPredictions")
+  patientPredictions                                                     Prediction[]                 @relation("PatientPredictions")
+  doctorReports                                                          Report[]                     @relation("DoctorReports")
+  patientReports                                                         Report[]                     @relation("PatientReports")
 
   @@map("users")
 }
@@ -37,68 +49,96 @@ model doctor_patient_assignments {
 }
 
 model Prediction {
-  id                             Int      @id @default(autoincrement())
-  patientId                      Int
-  doctorId                       Int
-  result                         String
-  createdAt                      DateTime @default(now())
-  Age                            Float
-  Gender                         Float
-  Country                        Float
-  Smoking_History                Float
-  Tumor_Size_mm                  Float
-  Mutation_Status                Float
-  Treatment_Type                 Float
-  Survival_Months                Float
-  Smoking_Pack_Years             Float
-  Biomarker_Status               Float
-  ECOG_Performance_Status        Float
-  Hemoglobin_Level               Float
-  White_Blood_Cell_Count         Float
-  Platelet_Count                 Float
-  Calcium_Level                  Float
-  Albumin_Level                  Float
-  LDH_Level                      Float
-  Creatinine_Level               Float
-  Glucose_Level                  Float
-  Cholesterol_Level              Float
-  Bilirubin_Level                Float
-  AST_Level                      Float
-  ALT_Level                       Float
-  Sodium_Level                   Float
-  Potassium_Level                Float
-  Chloride_Level                 Float
-  Urea_Level                     Float
-  Uric_Acid_Level                Float
-  Magnesium_Level                Float
-  Phosphorus_Level               Float
-  Iron_Level                     Float
-  Ferritin_Level                 Float
-  Transferrin_Level              Float
-  CRP_Level                      Float
-  ESR_Level                      Float
-  Procalcitonin_Level            Float
-  Vitamin_D_Level                Float
-  Vitamin_B12_Level              Float
-  Folate_Level                   Float
-  TSH_Level                      Float
-  Free_T3_Level                  Float
-  Free_T4_Level                  Float
-  Cortisol_Level                 Float
-  Insulin_Level                  Float
-  HbA1c_Level                    Float
-  Triglycerides_Level            Float
-  HDL_Level                      Float
-  LDL_Level                      Float
-  Total_Protein_Level            Float
-  Globulin_Level                 Float
-  Alkaline_Phosphatase_Level     Float
-  GGT_Level                      Float
-
-  patient                        User     @relation("PatientPredictions", fields: [patientId], references: [id])
-  doctor                         User     @relation("DoctorPredictions", fields: [doctorId], references: [id])
+  id                         Int      @id @default(autoincrement())
+  patientId                  Int
+  doctorId                   Int
+  result                     String
+  createdAt                  DateTime @default(now())
+  Age                        Float
+  Gender                     Float
+  Country                    Float
+  Smoking_History            Float
+  Tumor_Size_mm              Float
+  Mutation_Status            Float
+  Treatment_Type             Float
+  Survival_Months            Float
+  Smoking_Pack_Years         Float
+  Biomarker_Status           Float
+  ECOG_Performance_Status    Float
+  Hemoglobin_Level           Float
+  White_Blood_Cell_Count     Float
+  Platelet_Count             Float
+  Calcium_Level              Float
+  Albumin_Level              Float
+  LDH_Level                  Float
+  Creatinine_Level           Float
+  Glucose_Level              Float
+  Cholesterol_Level          Float
+  Bilirubin_Level            Float
+  AST_Level                  Float
+  ALT_Level                  Float
+  Sodium_Level               Float
+  Potassium_Level            Float
+  Chloride_Level             Float
+  Urea_Level                 Float
+  Uric_Acid_Level            Float
+  Magnesium_Level            Float
+  Phosphorus_Level           Float
+  Iron_Level                 Float
+  Ferritin_Level             Float
+  Transferrin_Level          Float
+  CRP_Level                  Float
+  ESR_Level                  Float
+  Procalcitonin_Level        Float
+  Vitamin_D_Level            Float
+  Vitamin_B12_Level          Float
+  Folate_Level               Float
+  TSH_Level                  Float
+  Free_T3_Level              Float
+  Free_T4_Level              Float
+  Cortisol_Level             Float
+  Insulin_Level              Float
+  HbA1c_Level                Float
+  Triglycerides_Level        Float
+  HDL_Level                  Float
+  LDL_Level                  Float
+  Total_Protein_Level        Float
+  Globulin_Level             Float
+  Alkaline_Phosphatase_Level Float
+  GGT_Level                  Float
+  status                     String   @default("Pending Review")
+  updatedAt                  DateTime @default(now()) @updatedAt
+  doctor                     User     @relation("DoctorPredictions", fields: [doctorId], references: [id])
+  patient                    User     @relation("PatientPredictions", fields: [patientId], references: [id])
 
   @@map("predictions")
+}
+
+model Report {
+  id        Int      @id @default(autoincrement())
+  patientId Int
+  doctorId  Int
+  fileName  String
+  filePath  String
+  fileType  String
+  createdAt DateTime @default(now())
+  doctor    User     @relation("DoctorReports", fields: [doctorId], references: [id])
+  patient   User     @relation("PatientReports", fields: [patientId], references: [id])
+
+  @@map("reports")
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  content    String
+  createdAt  DateTime @default(now())
+  isRead     Boolean  @default(false)
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+
+  @@map("messages")
 }
 
 enum UserRole {

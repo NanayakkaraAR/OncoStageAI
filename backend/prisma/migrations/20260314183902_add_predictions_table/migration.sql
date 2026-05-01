@@ -1,7 +1,5 @@
--- CreateEnum
 CREATE TYPE "UserRole" AS ENUM ('PATIENT', 'DOCTOR', 'ADMIN');
 
--- CreateTable
 CREATE TABLE "users" (
     "id" SERIAL NOT NULL,
     "email" TEXT NOT NULL,
@@ -16,7 +14,6 @@ CREATE TABLE "users" (
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
 CREATE TABLE "predictions" (
     "id" SERIAL NOT NULL,
     "patientId" INTEGER NOT NULL,
@@ -79,11 +76,8 @@ CREATE TABLE "predictions" (
     CONSTRAINT "predictions_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
--- AddForeignKey
 ALTER TABLE "predictions" ADD CONSTRAINT "predictions_patientId_fkey" FOREIGN KEY ("patientId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
--- AddForeignKey
 ALTER TABLE "predictions" ADD CONSTRAINT "predictions_doctorId_fkey" FOREIGN KEY ("doctorId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

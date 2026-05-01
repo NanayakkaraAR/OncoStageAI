@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { DoctorService, Doctor } from '../../services/doctor.service';
 import { AuthService } from '../../services/auth.service';
+import { PredictionService } from '../../services/prediction.service';
 
 @Component({
   selector: 'app-doctor-list',
@@ -228,17 +229,41 @@ export class DoctorListComponent implements OnInit {
   loading = true;
   error: string | null = null;
   currentUser: any;
+  private forceSelect = false;
 
   constructor(
     private doctorService: DoctorService,
     private authService: AuthService,
+    private predictionService: PredictionService,
     private router: Router
   ) {
     this.currentUser = this.authService.getCurrentUser();
+    const navState = this.router.getCurrentNavigation()?.extras?.state;
+    if (navState?.['forceSelect']) this.forceSelect = true;
   }
 
   ngOnInit(): void {
-    this.loadDoctors();
+    const shouldForce = this.forceSelect || history.state?.forceSelect === true;
+    if (shouldForce) {
+      this.loadDoctors();
+      return;
+    }
+
+    this.predictionService.getAssignedDoctor().subscribe({
+      next: (doctor) => {
+        if (doctor) {
+          this.router.navigate(['/patient/dashboard'], {
+            state: { selectedDoctor: doctor },
+            replaceUrl: true
+          });
+        } else {
+          this.loadDoctors();
+        }
+      },
+      error: () => {
+        this.loadDoctors();
+      }
+    });
   }
 
   loadDoctors(): void {
@@ -257,8 +282,18 @@ export class DoctorListComponent implements OnInit {
   }
 
   selectDoctor(doctor: Doctor): void {
-    this.router.navigate(['/patient/dashboard'], {
-      state: { selectedDoctor: doctor }
+    this.loading = true;
+    this.predictionService.assignDoctor(doctor.id).subscribe({
+      next: () => {
+        this.router.navigate(['/patient/dashboard'], {
+          state: { selectedDoctor: doctor }
+        });
+      },
+      error: () => {
+        this.router.navigate(['/patient/dashboard'], {
+          state: { selectedDoctor: doctor }
+        });
+      }
     });
   }
 
