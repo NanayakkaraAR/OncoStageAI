@@ -1,18 +1,42 @@
 import { Router } from 'express';
 import { Response } from 'express';
+import multer from 'multer';
+import path from 'path';
 import { authenticateToken, authorizeRoles, AuthRequest } from '../middleware/auth.middleware';
-import { getDoctors, submitPrediction, getDoctorPredictions } from '../controllers/predictions.controller';
+import { getMessages, sendMessage, getChatPartners } from '../controllers/chat.controller';
+import { getDoctors, submitPrediction, getDoctorPredictions, getPatientPredictions, getAssignedDoctor, assignDoctor, updatePredictionStatus, getDoctorPatients } from '../controllers/predictions.controller';
+import { getUserSettings, updateProfile, updateNotifications, changePassword } from '../controllers/user.controller';
+import { uploadReport, getPatientReports, getDoctorReports, getAllDoctorReports, parseReport, getReportFile } from '../controllers/report.controller';
 
 const router = Router();
 
-// ── Shared – any authenticated user ─────────────────────────────────────────
-// List all active doctors (patients use this to choose their doctor)
+// Configure Multer
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '../../uploads');
+    if (!require('fs').existsSync(uploadPath)) {
+      require('fs').mkdirSync(uploadPath);
+    }
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+const upload = multer({ storage });
+
 router.get('/doctors',
   authenticateToken,
   getDoctors
 );
+router.get('/user/settings', authenticateToken, getUserSettings);
+router.put('/user/profile', authenticateToken, updateProfile);
+router.put('/user/notifications', authenticateToken, updateNotifications);
+router.put('/user/change-password', authenticateToken, changePassword);
+router.get('/chat/partners', authenticateToken, getChatPartners);
+router.get('/chat/:userId', authenticateToken, getMessages);
+router.post('/chat/send', authenticateToken, sendMessage);
 
-// ── Patient dashboard ────────────────────────────────────────────────────────
 router.get('/patient/dashboard',
   authenticateToken,
   authorizeRoles('PATIENT'),
@@ -21,14 +45,63 @@ router.get('/patient/dashboard',
   }
 );
 
-// Submit a prediction – patient fills the form, result is saved under doctorId
+router.get('/patient/predictions',
+  authenticateToken,
+  authorizeRoles('PATIENT'),
+  getPatientPredictions
+);
+
+router.get('/patient/assigned-doctor',
+  authenticateToken,
+  authorizeRoles('PATIENT'),
+  getAssignedDoctor
+);
+
+router.post('/patient/assign-doctor',
+  authenticateToken,
+  authorizeRoles('PATIENT'),
+  assignDoctor
+);
+
+// Report Routes
+router.post('/reports/upload',
+  authenticateToken,
+  authorizeRoles('PATIENT'),
+  upload.single('report'),
+  uploadReport
+);
+router.get('/reports/patient',
+  authenticateToken,
+  authorizeRoles('PATIENT'),
+  getPatientReports
+);
+router.get('/reports/doctor/:patientId',
+  authenticateToken,
+  authorizeRoles('DOCTOR'),
+  getDoctorReports
+);
+router.get('/reports/doctor-all',
+  authenticateToken,
+  authorizeRoles('DOCTOR'),
+  getAllDoctorReports
+);
+router.post('/reports/:reportId/parse',
+  authenticateToken,
+  authorizeRoles('DOCTOR'),
+  parseReport
+);
+router.get('/reports/:reportId/file',
+  authenticateToken,
+  authorizeRoles('PATIENT', 'DOCTOR'),
+  getReportFile
+);
+
 router.post('/predict',
   authenticateToken,
   authorizeRoles('PATIENT', 'DOCTOR'),
   submitPrediction
 );
 
-// ── Doctor dashboard ─────────────────────────────────────────────────────────
 router.get('/doctor/dashboard',
   authenticateToken,
   authorizeRoles('DOCTOR'),
@@ -37,14 +110,24 @@ router.get('/doctor/dashboard',
   }
 );
 
-// Doctor sees all predictions belonging to them
 router.get('/doctor/predictions',
   authenticateToken,
   authorizeRoles('DOCTOR'),
   getDoctorPredictions
 );
 
-// ── Admin dashboard ──────────────────────────────────────────────────────────
+router.get('/doctor/patients',
+  authenticateToken,
+  authorizeRoles('DOCTOR'),
+  getDoctorPatients
+);
+
+router.patch('/doctor/predictions/:id/status',
+  authenticateToken,
+  authorizeRoles('DOCTOR'),
+  updatePredictionStatus
+);
+
 router.get('/admin/dashboard',
   authenticateToken,
   authorizeRoles('ADMIN'),

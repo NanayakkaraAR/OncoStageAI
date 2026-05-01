@@ -8,6 +8,7 @@ export interface Doctor {
   firstName: string;
   lastName: string;
   email: string;
+  unreadCount?: number;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 
-// Define the expected input from the frontend/patient
 interface PredictionRequest {
   Age: number;
   Gender: number;
@@ -59,8 +58,6 @@ interface PredictionRequest {
 export const predictLungCancerStage = async (req: Request, res: Response) => {
   try {
     const patientData: Partial<PredictionRequest> = req.body;
-
-    // Send the data forward to the Python FastAPI ML service running on port 8000
     const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000/predict';
     
     const mlResponse = await fetch(mlServiceUrl, {
@@ -76,8 +73,6 @@ export const predictLungCancerStage = async (req: Request, res: Response) => {
     }
 
     const result = await mlResponse.json();
-
-    // Send the prediction back to the client
     res.json({
         success: true,
         data: result

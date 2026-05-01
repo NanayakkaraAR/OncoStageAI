@@ -10,25 +10,16 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Routes
 app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'OncoStage AI API is running' });
 });
-
-// Auth routes
 app.use('/api/auth', authRoutes);
-
-// Protected routes
 app.use('/api', protectedRoutes);
-
 app.get('/api/health', async (req: Request, res: Response) => {
   try {
-    // Test database connection
     const result = await pool.query('SELECT NOW()');
     res.json({ 
       status: 'healthy', 
@@ -62,7 +53,6 @@ app.get('/api/db-test', async (req: Request, res: Response) => {
   }
 });
 
-// Start server
 app.listen(port, () => {
   console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
 });

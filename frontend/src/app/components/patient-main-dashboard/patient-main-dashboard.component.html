@@ -1,0 +1,161 @@
+<div class="page-wrapper">
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-logo">🫁</span>
+        <span class="brand-name">LungCare AI</span>
+      </div>
+      <nav class="main-nav">
+        <a routerLink="/patient/dashboard" class="nav-item active">
+          <span class="nav-icon">⊞</span> Dashboard
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">📄</span> My Reports
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">⚙</span> Settings
+        </a>
+      </nav>
+      <div class="header-right">
+        <div class="user-info">
+          <span class="user-name">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</span>
+          <span class="user-role">Patient</span>
+        </div>
+        <button class="btn-logout" (click)="logout()">
+          <span>⮑</span> Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="content">
+    <!-- Welcome Section -->
+    <section class="welcome-section">
+      <h1>Welcome back, {{ currentUser?.firstName }} {{ currentUser?.lastName }}!</h1>
+      <p>Monitor your lung health with AI-powered predictions</p>
+    </section>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon pulse-icon">🫀</div>
+          <span class="trend-up">↗</span>
+        </div>
+        <div class="stat-value">{{ stats.totalPredictions }}</div>
+        <div class="stat-label">Total Predictions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon warning-icon">⚠️</div>
+          <span class="trend-up">↗</span>
+        </div>
+        <div class="stat-value">{{ stats.pendingReviews }}</div>
+        <div class="stat-label">Pending Reviews</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-header">
+          <div class="stat-icon success-icon">📄</div>
+          <span class="trend-up">↗</span>
+        </div>
+        <div class="stat-value">{{ stats.completed }}</div>
+        <div class="stat-label">Completed</div>
+      </div>
+    </div>
+3
+    <div class="action-bar">
+      <button class="btn-primary" (click)="navigateToAssessment()">
+        <span class="btn-icon">⚡</span> Enter Health Data for Prediction
+      </button>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="main-column">
+        <div class="card latest-prediction">
+          <div class="card-header">
+            <h3>Latest Prediction Result</h3>
+            <span class="date-icon">📅</span>
+          </div>
+          <div class="result-details">
+            <div class="detail-row">
+              <span class="label">Date</span>
+              <span class="value">{{ latestResult.date }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Risk Level</span>
+              <span class="badge" [class]="latestResult.riskLevel.toLowerCase()">{{ latestResult.riskLevel }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Predicted Stage</span>
+              <span class="value strong">{{ latestResult.predictedStage }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">Confidence</span>
+              <div class="confidence-wrapper">
+                <div class="progress-bar">
+                  <div class="progress" [style.width.%]="latestResult.confidence"></div>
+                </div>
+                <span class="confidence-value">{{ latestResult.confidence }}%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="doctor-comments">
+            <div class="comment-header">
+              <span class="comment-icon">🩺</span>
+              <h4>Doctor's Comments</h4>
+            </div>
+            <p class="comment-text">{{ latestResult.doctorComment }}</p>
+          </div>
+
+          <button class="btn-outline full-width">View Detailed Report</button>
+        </div>
+
+        <div class="card history-card">
+          <div class="card-header">
+            <h3>Recent Prediction History</h3>
+            <a href="#" class="view-all">View All</a>
+          </div>
+          <div class="history-list">
+            <div class="history-item" *ngFor="let item of recentHistory">
+              <div class="history-info">
+                <div class="file-icon">📄</div>
+                <div>
+                  <div class="history-date">{{ item.date }}</div>
+                  <div class="history-stage">{{ item.stage }}</div>
+                </div>
+              </div>
+              <span class="badge" [class]="item.risk.toLowerCase()">{{ item.risk }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-column">
+        <div class="card notifications-card">
+          <div class="card-header">
+            <h3>
+              <span class="header-icon">🔔</span> Notifications
+            </h3>
+            <span class="notif-count">2</span>
+          </div>
+          <div class="notifications-list">
+            <div class="notification-item">
+              <p>Dr. Sarah Smith reviewed your latest prediction</p>
+              <span class="time-ago">2 hours ago</span>
+            </div>
+            <div class="notification-item highlight">
+              <p>Time for your next health check-up</p>
+              <span class="time-ago">1 day ago</span>
+            </div>
+            <div class="notification-item">
+              <p>New AI model update improving accuracy</p>
+              <span class="time-ago">3 days ago</span>
+            </div>
+          </div>
+          <button class="view-all-notif">View All Notifications</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
