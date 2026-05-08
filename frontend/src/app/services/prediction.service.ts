@@ -3,10 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-export interface PredictionResult {
-  prediction: string;
-  predictionId: number;
-}
+export type PredictionResult = PatientPrediction;
 
 export interface PatientPrediction {
   id: number;
@@ -19,6 +16,27 @@ export interface PatientPrediction {
   Smoking_Pack_Years: number;
   Calcium_Level: number;
   ECOG_Performance_Status: number;
+  Hemoglobin_Level: number;
+  White_Blood_Cell_Count: number;
+  Platelet_Count: number;
+  Albumin_Level: number;
+  LDH_Level: number;
+  Creatinine_Level: number;
+  Glucose_Level: number;
+  AST_Level: number;
+  ALT_Level: number;
+  Sodium_Level: number;
+  Potassium_Level: number;
+  Phosphorus_Level: number;
+  Alkaline_Phosphatase_Level: number;
+  Family_History: number;
+  Coughing: number;
+  Shortness_Of_Breath: number;
+  Chest_Pain: number;
+  Fatigue: number;
+  Wheezing: number;
+  Yellow_Fingers: number;
+  Swallowing_Difficulty: number;
   status: string;
   updatedAt?: string;
 }
@@ -34,6 +52,20 @@ export interface PatientOwnPrediction {
   Smoking_History: number;
   Smoking_Pack_Years: number;
   Calcium_Level: number;
+  ECOG_Performance_Status: number;
+  Hemoglobin_Level: number;
+  White_Blood_Cell_Count: number;
+  Platelet_Count: number;
+  Albumin_Level: number;
+  LDH_Level: number;
+  Creatinine_Level: number;
+  Glucose_Level: number;
+  AST_Level: number;
+  ALT_Level: number;
+  Sodium_Level: number;
+  Potassium_Level: number;
+  Phosphorus_Level: number;
+  Alkaline_Phosphatase_Level: number;
   status: string;
   updatedAt?: string;
 }

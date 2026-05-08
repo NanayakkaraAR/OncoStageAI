@@ -68,7 +68,6 @@ export const getChatPartners = async (req: Request, res: Response) => {
   try {
     const currentUserId = (req as any).user.id;
 
-    // Get unique doctor IDs from messages
     const messagePartners = await prisma.message.findMany({
       where: {
         OR: [{ senderId: currentUserId }, { receiverId: currentUserId }],
@@ -76,13 +75,11 @@ export const getChatPartners = async (req: Request, res: Response) => {
       select: { senderId: true, receiverId: true },
     });
 
-    // Get unique doctor IDs from predictions
     const predictionPartners = await prisma.prediction.findMany({
       where: { patientId: currentUserId },
       select: { doctorId: true },
     });
 
-    // Get assigned doctor
     const assignment = await prisma.doctor_patient_assignments.findUnique({
       where: { patientId: currentUserId },
     });
@@ -97,7 +94,6 @@ export const getChatPartners = async (req: Request, res: Response) => {
       partnerIds.add(assignment.doctorId);
     }
 
-    // Fetch user details for these partners (only Doctors)
     const doctors = await prisma.user.findMany({
       where: {
         id: { in: Array.from(partnerIds) },
@@ -111,7 +107,6 @@ export const getChatPartners = async (req: Request, res: Response) => {
       }
     });
 
-    // Add unread count for each doctor
     const doctorsWithUnread = await Promise.all(doctors.map(async (doc) => {
       const unreadCount = await prisma.message.count({
         where: {

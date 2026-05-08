@@ -122,17 +122,43 @@ export const submitPrediction = async (req: AuthRequest, res: Response) => {
     }
 
     const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000/predict';
-    const mlResponse = await fetch(mlServiceUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(featureData),
+    
+    // Sanitize featureData for ML Service (ensure all numbers)
+    const sanitizedFeatures: any = {};
+    Object.keys(featureData).forEach(key => {
+      const val = featureData[key];
+      if (val !== null && val !== undefined && val !== '') {
+        sanitizedFeatures[key] = Number(val);
+      }
     });
 
-    if (!mlResponse.ok) {
-      throw new Error(`ML Service responded with status: ${mlResponse.status}`);
+    console.log('Sending to ML Service:', sanitizedFeatures);
+
+    let mlResponse;
+    try {
+      mlResponse = await fetch(mlServiceUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(sanitizedFeatures),
+      });
+    } catch (fetchErr) {
+      console.error('ML Service connection error:', fetchErr);
+      return res.status(502).json({ 
+        success: false, 
+        error: 'Could not connect to AI Service. Please ensure the ML backend is running.' 
+      });
     }
 
-    const mlResult: { prediction: string; status: string } = await mlResponse.json() as any;
+    if (!mlResponse.ok) {
+      const errorText = await mlResponse.text();
+      console.error('ML Service Error Response:', errorText);
+      return res.status(mlResponse.status).json({ 
+        success: false, 
+        error: `AI Service Error: ${errorText || mlResponse.statusText}` 
+      });
+    }
+
+    const mlResult = await mlResponse.json() as any;
 
     const prediction = await prisma.prediction.create({
       data: {
@@ -140,62 +166,71 @@ export const submitPrediction = async (req: AuthRequest, res: Response) => {
         doctorId: Number(doctorId),
         result: mlResult.prediction,
         status: req.user!.role === 'DOCTOR' ? 'Reviewed' : 'Pending Review',
-        Age: featureData.Age ?? 0,
-        Gender: featureData.Gender ?? 0,
-        Country: featureData.Country ?? 0,
-        Smoking_History: featureData.Smoking_History ?? 0,
-        Tumor_Size_mm: featureData.Tumor_Size_mm ?? 0,
-        Mutation_Status: featureData.Mutation_Status ?? 0,
-        Treatment_Type: featureData.Treatment_Type ?? 0,
-        Survival_Months: featureData.Survival_Months ?? 0,
-        Smoking_Pack_Years: featureData.Smoking_Pack_Years ?? 0,
-        Biomarker_Status: featureData.Biomarker_Status ?? 0,
-        ECOG_Performance_Status: featureData.ECOG_Performance_Status ?? 0,
-        Hemoglobin_Level: featureData.Hemoglobin_Level ?? 0,
-        White_Blood_Cell_Count: featureData.White_Blood_Cell_Count ?? 0,
-        Platelet_Count: featureData.Platelet_Count ?? 0,
-        Calcium_Level: featureData.Calcium_Level ?? 0,
-        Albumin_Level: featureData.Albumin_Level ?? 0,
-        LDH_Level: featureData.LDH_Level ?? 0,
-        Creatinine_Level: featureData.Creatinine_Level ?? 0,
-        Glucose_Level: featureData.Glucose_Level ?? 0,
-        Cholesterol_Level: featureData.Cholesterol_Level ?? 0,
-        Bilirubin_Level: featureData.Bilirubin_Level ?? 0,
-        AST_Level: featureData.AST_Level ?? 0,
-        ALT_Level: featureData.ALT_Level ?? 0,
-        Sodium_Level: featureData.Sodium_Level ?? 0,
-        Potassium_Level: featureData.Potassium_Level ?? 0,
-        Chloride_Level: featureData.Chloride_Level ?? 0,
-        Urea_Level: featureData.Urea_Level ?? 0,
-        Uric_Acid_Level: featureData.Uric_Acid_Level ?? 0,
-        Magnesium_Level: featureData.Magnesium_Level ?? 0,
-        Phosphorus_Level: featureData.Phosphorus_Level ?? 0,
-        Iron_Level: featureData.Iron_Level ?? 0,
-        Ferritin_Level: featureData.Ferritin_Level ?? 0,
-        Transferrin_Level: featureData.Transferrin_Level ?? 0,
-        CRP_Level: featureData.CRP_Level ?? 0,
-        ESR_Level: featureData.ESR_Level ?? 0,
-        Procalcitonin_Level: featureData.Procalcitonin_Level ?? 0,
-        Vitamin_D_Level: featureData.Vitamin_D_Level ?? 0,
-        Vitamin_B12_Level: featureData.Vitamin_B12_Level ?? 0,
-        Folate_Level: featureData.Folate_Level ?? 0,
-        TSH_Level: featureData.TSH_Level ?? 0,
-        Free_T3_Level: featureData.Free_T3_Level ?? 0,
-        Free_T4_Level: featureData.Free_T4_Level ?? 0,
-        Cortisol_Level: featureData.Cortisol_Level ?? 0,
-        Insulin_Level: featureData.Insulin_Level ?? 0,
-        HbA1c_Level: featureData.HbA1c_Level ?? 0,
-        Triglycerides_Level: featureData.Triglycerides_Level ?? 0,
-        HDL_Level: featureData.HDL_Level ?? 0,
-        LDL_Level: featureData.LDL_Level ?? 0,
-        Total_Protein_Level: featureData.Total_Protein_Level ?? 0,
-        Globulin_Level: featureData.Globulin_Level ?? 0,
-        Alkaline_Phosphatase_Level: featureData.Alkaline_Phosphatase_Level ?? 0,
-        GGT_Level: featureData.GGT_Level ?? 0,
+        Age: Number(featureData.Age) || 0,
+        Gender: Number(featureData.Gender) || 0,
+        Country: Number(featureData.Country) || 0,
+        Smoking_History: Number(featureData.Smoking_History) || 0,
+        Tumor_Size_mm: Number(featureData.Tumor_Size_mm) || 0,
+        Mutation_Status: Number(featureData.Mutation_Status) || 0,
+        Treatment_Type: Number(featureData.Treatment_Type) || 0,
+        Survival_Months: Number(featureData.Survival_Months) || 0,
+        Smoking_Pack_Years: Number(featureData.Smoking_Pack_Years) || 0,
+        Biomarker_Status: Number(featureData.Biomarker_Status) || 0,
+        ECOG_Performance_Status: Number(featureData.ECOG_Performance_Status) || 0,
+        Hemoglobin_Level: Number(featureData.Hemoglobin_Level) || 0,
+        White_Blood_Cell_Count: Number(featureData.White_Blood_Cell_Count) || 0,
+        Platelet_Count: Number(featureData.Platelet_Count) || 0,
+        Calcium_Level: Number(featureData.Calcium_Level) || 0,
+        Albumin_Level: Number(featureData.Albumin_Level) || 0,
+        LDH_Level: Number(featureData.LDH_Level) || 0,
+        Creatinine_Level: Number(featureData.Creatinine_Level) || 0,
+        Glucose_Level: Number(featureData.Glucose_Level) || 0,
+        Cholesterol_Level: Number(featureData.Cholesterol_Level) || 0,
+        Bilirubin_Level: Number(featureData.Bilirubin_Level) || 0,
+        AST_Level: Number(featureData.Aspartate_Aminotransferase_Level ?? featureData.AST_Level ?? 0),
+        ALT_Level: Number(featureData.Alanine_Aminotransferase_Level ?? featureData.ALT_Level ?? 0),
+        Sodium_Level: Number(featureData.Sodium_Level) || 0,
+        Potassium_Level: Number(featureData.Potassium_Level) || 0,
+        Chloride_Level: Number(featureData.Chloride_Level) || 0,
+        Urea_Level: Number(featureData.Urea_Level) || 0,
+        Uric_Acid_Level: Number(featureData.Uric_Acid_Level) || 0,
+        Magnesium_Level: Number(featureData.Magnesium_Level) || 0,
+        Phosphorus_Level: Number(featureData.Phosphorus_Level) || 0,
+        Iron_Level: Number(featureData.Iron_Level) || 0,
+        Ferritin_Level: Number(featureData.Ferritin_Level) || 0,
+        Transferrin_Level: Number(featureData.Transferrin_Level) || 0,
+        CRP_Level: Number(featureData.CRP_Level) || 0,
+        ESR_Level: Number(featureData.ESR_Level) || 0,
+        Procalcitonin_Level: Number(featureData.Procalcitonin_Level) || 0,
+        Vitamin_D_Level: Number(featureData.Vitamin_D_Level) || 0,
+        Vitamin_B12_Level: Number(featureData.Vitamin_B12_Level) || 0,
+        Folate_Level: Number(featureData.Folate_Level) || 0,
+        TSH_Level: Number(featureData.TSH_Level) || 0,
+        Free_T3_Level: Number(featureData.Free_T3_Level) || 0,
+        Free_T4_Level: Number(featureData.Free_T4_Level) || 0,
+        Cortisol_Level: Number(featureData.Cortisol_Level) || 0,
+        Insulin_Level: Number(featureData.Insulin_Level) || 0,
+        HbA1c_Level: Number(featureData.HbA1c_Level) || 0,
+        Triglycerides_Level: Number(featureData.Triglycerides_Level) || 0,
+        HDL_Level: Number(featureData.HDL_Level) || 0,
+        LDL_Level: Number(featureData.LDL_Level) || 0,
+        Total_Protein_Level: Number(featureData.Total_Protein_Level) || 0,
+        Globulin_Level: Number(featureData.Globulin_Level) || 0,
+        Alkaline_Phosphatase_Level: Number(featureData.Alkaline_Phosphatase_Level) || 0,
+        GGT_Level: Number(featureData.GGT_Level) || 0,
       },
     });
 
-    res.json({ success: true, data: { prediction: mlResult.prediction, predictionId: prediction.id } });
+    const fullPrediction = await prisma.prediction.findUnique({
+      where: { id: prediction.id },
+      include: {
+        patient: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
+      },
+    });
+
+    res.json({ success: true, data: fullPrediction });
   } catch (error) {
     console.error('Prediction error:', error);
     res.status(500).json({

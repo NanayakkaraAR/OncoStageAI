@@ -150,13 +150,16 @@ export const getReportFile = async (req: AuthRequest, res: Response) => {
     }
 
     if (report.fileContent) {
-      res.setHeader('Content-Type', report.fileType);
+      console.log(`Serving report ${report.id} from database (${report.fileContent.length} bytes)`);
+      res.setHeader('Content-Type', report.fileType || 'application/pdf');
+      res.setHeader('Content-Length', report.fileContent.length);
       res.setHeader('Content-Disposition', `inline; filename="${report.fileName}"`);
-      return res.send(report.fileContent);
+      return res.end(Buffer.from(report.fileContent));
     }
 
     const absolutePath = path.resolve(report.filePath);
     if (!fs.existsSync(absolutePath)) {
+      console.error(`File not found on disk: ${absolutePath}`);
       return res.status(404).json({ success: false, error: 'File not found on disk and no DB content available' });
     }
 
