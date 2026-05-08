@@ -6,7 +6,7 @@ import { authenticateToken, authorizeRoles, AuthRequest } from '../middleware/au
 import { getMessages, sendMessage, getChatPartners } from '../controllers/chat.controller';
 import { getDoctors, submitPrediction, getDoctorPredictions, getPatientPredictions, getAssignedDoctor, assignDoctor, updatePredictionStatus, getDoctorPatients } from '../controllers/predictions.controller';
 import { getUserSettings, updateProfile, updateNotifications, changePassword } from '../controllers/user.controller';
-import { uploadReport, getPatientReports, getDoctorReports, getAllDoctorReports, parseReport, getReportFile } from '../controllers/report.controller';
+import { uploadReport, getPatientReports, getDoctorReports, getAllDoctorReports, parseReport, getReportFile, deleteReport, updateReportStatus } from '../controllers/report.controller';
 
 const router = Router();
 
@@ -94,6 +94,16 @@ router.get('/reports/:reportId/file',
   authenticateToken,
   authorizeRoles('PATIENT', 'DOCTOR'),
   getReportFile
+);
+router.delete('/reports/:reportId',
+  authenticateToken,
+  authorizeRoles('PATIENT', 'DOCTOR'),
+  deleteReport
+);
+router.patch('/reports/:reportId/status',
+  authenticateToken,
+  authorizeRoles('PATIENT', 'DOCTOR'),
+  updateReportStatus
 );
 
 router.post('/predict',

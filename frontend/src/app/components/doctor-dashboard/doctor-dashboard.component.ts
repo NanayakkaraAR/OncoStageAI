@@ -129,7 +129,7 @@ declare var JitsiMeetExternalAPI: any;
                 <span class="tag-yellow">{{ getPendingCount() }} cases</span>
               </div>
 
-              <div *ngIf="getPendingCount() === 0" class="empty-list">No pending reviews right now.</div>
+              <div *ngIf="getPendingCount() === 0 && getPendingReports().length === 0" class="empty-list">No pending reviews right now.</div>
 
               <!-- Case Row Cards -->
               <div class="case-card" *ngFor="let p of getPendingCases()">
@@ -147,16 +147,38 @@ declare var JitsiMeetExternalAPI: any;
                 </div>
                 <button class="btn-review" (click)="openReview(p)">Review Case</button>
               </div>
+
+              <!-- Pending Reports -->
+              <div class="case-card" *ngFor="let r of getPendingReports()" style="border-left: 4px solid #f97316;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="background: #fff7ed; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    </div>
+                    <div>
+                      <div style="font-weight: 600; color: #1e293b;">{{ r.fileName }}</div>
+                      <div style="font-size: 0.8rem; color: #64748b;">Report by: {{ r.patient?.firstName }} {{ r.patient?.lastName }}</div>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 8px;">
+                    <button class="btn-white-outline" style="width: auto; padding: 6px 16px;" (click)="viewReport(r)">View</button>
+                    <button class="btn-review" style="width: auto; padding: 6px 16px; height: auto;" (click)="assessFromDashboard(r)">Assess & Auto-fill</button>
+                    <button class="btn-delete-small" (click)="deleteReport(r)" title="Delete Report">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <!-- SHARED REPORTS (GLOBAL OR RECENT) -->
-            <div class="list-container" style="margin-top: 32px;" *ngIf="patientReports.length > 0">
+            <div class="list-container" style="margin-top: 32px;" *ngIf="getReviewedReports().length > 0">
               <div class="list-title" style="display:flex; justify-content:space-between;">
-                <span>Recently Shared Reports</span>
-                <span class="tag-blue">{{ patientReports.length }} new</span>
+                <span>Reviewed Reports</span>
+                <span class="tag-blue">{{ getReviewedReports().length }} total</span>
               </div>
               <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 16px;">
-                <div *ngFor="let r of patientReports" class="case-card" style="padding: 16px;">
+                <div *ngFor="let r of getReviewedReports()" class="case-card" style="padding: 16px;">
                   <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; align-items: center; gap: 12px;">
                       <div style="background: #f0f9ff; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
@@ -168,8 +190,10 @@ declare var JitsiMeetExternalAPI: any;
                       </div>
                     </div>
                     <div style="display: flex; gap: 8px;">
-                      <button class="btn-white-outline" style="width: auto; padding: 6px 16px;" (click)="viewReport(r)">View</button>
-                      <button class="btn-review" style="width: auto; padding: 6px 16px; height: auto;" (click)="assessFromDashboard(r)">Assess & Auto-fill</button>
+                      <button class="btn-review" style="width: auto; padding: 6px 16px; height: auto; background: #6366f1;" (click)="viewResult(r)">View Result</button>
+                      <button class="btn-delete-small" (click)="deleteReport(r)" title="Delete Report">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -253,12 +277,12 @@ declare var JitsiMeetExternalAPI: any;
               <div class="rg-card">
                  <h3 class="rg-card-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Patient Information</h3>
                  <div class="data-grid-2">
-                   <div><span>Patient Name</span><strong>{{ selectedPatient?.firstName }} {{ selectedPatient?.lastName }}</strong></div>
-                   <div><span>Patient ID</span><strong>P-10{{ selectedPatient?.id }}</strong></div>
-                   <div><span>Age</span><strong>{{ selectedPrediction?.Age }} years</strong></div>
-                   <div><span>Gender</span><strong>{{ getGenderStr(selectedPatient?.id || 1) }}</strong></div>
-                   <div><span>Email</span><strong>{{ selectedPatient?.email }}</strong></div>
-                   <div><span>Phone</span><strong>+1 (555) 123-4567</strong></div>
+                   <div class="data-row"><span>Patient Name</span><strong>{{ selectedPatient?.firstName }} {{ selectedPatient?.lastName }}</strong></div>
+                   <div class="data-row"><span>Patient ID</span><strong>P-{{ selectedPatient?.id || '101' }}</strong></div>
+                   <div class="data-row"><span>Age</span><strong>{{ selectedPrediction?.Age || 'N/A' }} years</strong></div>
+                   <div class="data-row"><span>Gender</span><strong>{{ selectedPrediction?.Gender === 1 ? 'Male' : 'Female' }}</strong></div>
+                   <div class="data-row"><span>Email</span><strong>{{ selectedPatient?.email }}</strong></div>
+                   <div class="data-row"><span>Phone</span><strong>+1 (555) 123-4567</strong></div>
                  </div>
               </div>
 
@@ -268,36 +292,40 @@ declare var JitsiMeetExternalAPI: any;
                  
                  <div class="data-row">
                     <span class="dr-lbl">Smoking History</span>
-                    <strong class="dr-val">{{ selectedPrediction?.Smoking_History === 1 ? 'Former Smoker' : 'Non-Smoker' }} ({{ selectedPrediction?.Smoking_Pack_Years || 5 }} pack years)</strong>
+                    <strong class="dr-val">{{ selectedPrediction?.Smoking_History ? 'Smoker' : 'Non-Smoker' }} ({{ selectedPrediction?.Smoking_Pack_Years || 0 }} pack years)</strong>
                  </div>
                  
                  <div class="data-row">
                     <span class="dr-lbl">Symptoms</span>
                     <div class="sym-tags">
-                      <span class="sym-tag">Persistent Cough</span>
-                      <span class="sym-tag">Shortness of Breath</span>
-                      <span class="sym-tag">Chest Pain</span>
+                      <span class="sym-tag" *ngIf="selectedPrediction?.Coughing">Coughing</span>
+                      <span class="sym-tag" *ngIf="selectedPrediction?.Shortness_Of_Breath">Shortness of Breath</span>
+                      <span class="sym-tag" *ngIf="selectedPrediction?.Chest_Pain">Chest Pain</span>
+                      <span class="sym-tag" *ngIf="selectedPrediction?.Fatigue">Fatigue</span>
+                      <span class="sym-tag" *ngIf="selectedPrediction?.Wheezing">Wheezing</span>
+                      <span class="sym-tag" *ngIf="selectedPrediction?.Yellow_Fingers">Yellow Fingers</span>
+                      <span class="sym-tag" *ngIf="selectedPrediction?.Swallowing_Difficulty">Swallowing Difficulty</span>
                     </div>
                  </div>
 
                  <div class="data-row">
                     <span class="dr-lbl">Family History</span>
-                    <strong class="dr-val">Immediate Family</strong>
+                    <strong class="dr-val">{{ selectedPrediction?.Family_History ? 'Positive Family History' : 'No Family History' }}</strong>
                  </div>
 
                  <div class="data-row" style="margin-bottom:8px;">
                     <span class="dr-lbl">Medical Test Values</span>
                  </div>
                  <div class="med-grid">
-                    <div class="med-box"><span>Hemoglobin</span><strong>14.2 g/dL</strong></div>
-                    <div class="med-box"><span>White Blood Cells</span><strong>7.8 ×10³/µL</strong></div>
-                    <div class="med-box"><span>Platelets</span><strong>245 ×10³/µL</strong></div>
-                    <div class="med-box"><span>Calcium Level</span><strong>{{ selectedPrediction?.Calcium_Level || 9.5 }} mg/dL</strong></div>
+                    <div class="med-box"><span>Hemoglobin</span><strong>{{ selectedPrediction?.Hemoglobin_Level || 'N/A' }} g/dL</strong></div>
+                    <div class="med-box"><span>White Blood Cells</span><strong>{{ selectedPrediction?.White_Blood_Cell_Count || 'N/A' }} ×10³/µL</strong></div>
+                    <div class="med-box"><span>Platelets</span><strong>{{ selectedPrediction?.Platelet_Count || 'N/A' }} ×10³/µL</strong></div>
+                    <div class="med-box"><span>Calcium Level</span><strong>{{ selectedPrediction?.Calcium_Level || 'N/A' }} mg/dL</strong></div>
                  </div>
 
                  <div class="data-row" style="margin-top:20px;">
-                    <span class="dr-lbl">Lifestyle / Environmental Factors</span>
-                    <strong class="dr-val">Former construction worker with asbestos exposure</strong>
+                    <span class="dr-lbl">Clinical Performance</span>
+                    <strong class="dr-val">ECOG Status: {{ selectedPrediction?.ECOG_Performance_Status || 0 }}</strong>
                  </div>
               </div>
               
@@ -357,16 +385,16 @@ declare var JitsiMeetExternalAPI: any;
                  <h3 class="rg-card-title" style="color:#0f172a; margin-bottom: 20px;">Your Professional Assessment</h3>
                  <div style="margin-top:16px;">
                     <span style="display:block; font-size:0.9rem; font-weight:600; color:#475569; margin-bottom:8px;">Medical Comments & Observations</span>
-                    <textarea class="assess-ta" placeholder="Enter your professional assessment, observations, and comments..."></textarea>
+                    <textarea class="assess-ta" [(ngModel)]="doctorComments" placeholder="Enter your professional assessment, observations, and comments..."></textarea>
                  </div>
                  <div style="margin-top:20px;">
                     <span style="display:block; font-size:0.9rem; font-weight:600; color:#475569; margin-bottom:8px;">Recommendations & Next Steps</span>
-                    <select class="assess-select">
-                       <option>Select Recommendation</option>
-                       <option>Schedule Biopsy</option>
-                       <option>PET Scan Required</option>
-                       <option>Continue Monitoring</option>
-                       <option>Begin Radiotherapy Consult</option>
+                    <select class="assess-select" [(ngModel)]="doctorRecommendation">
+                       <option value="">Select Recommendation</option>
+                       <option value="Schedule Biopsy">Schedule Biopsy</option>
+                       <option value="PET Scan Required">PET Scan Required</option>
+                       <option value="Continue Monitoring">Continue Monitoring</option>
+                       <option value="Begin Radiotherapy Consult">Begin Radiotherapy Consult</option>
                     </select>
                  </div>
               </div>
@@ -570,25 +598,6 @@ declare var JitsiMeetExternalAPI: any;
         </div>
 
         <div class="assessment-container" style="padding: 0 40px 40px;">
-           <!-- Shared Reports for Reference -->
-           <div class="form-card" style="margin-bottom: 24px; padding: 20px;" *ngIf="patientReports.length > 0">
-             <h4 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
-               Patient Shared Reports (Reference)
-             </h4>
-             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px;">
-               <div *ngFor="let r of patientReports" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
-                 <div style="display: flex; align-items: center; gap: 10px;">
-                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                   <span style="font-size: 0.85rem; font-weight: 600; color: #334155;">{{ r.fileName }}</span>
-                 </div>
-                 <div style="display: flex; gap: 6px;">
-                   <button (click)="viewReport(r)" type="button" style="background: #fff; border: 1px solid #cbd5e1; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">View</button>
-                   <button (click)="autoFillFromReport(r)" type="button" style="background: #f0f9ff; border: 1px solid #bae6fd; color: #0ea5e9; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Auto-fill</button>
-                 </div>
-               </div>
-             </div>
-           </div>
 
            <div class="form-card" style="background:#fff; border-radius:16px; border:1px solid #e2e8f0; padding:32px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
               
@@ -876,6 +885,7 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   submittingAssessment = false;
   predictionResult: string | null = null;
   patientReports: MedicalReport[] = [];
+  selectedReportForAssessment: MedicalReport | null = null;
 
   fieldGroups: any[] = [
     {
@@ -970,6 +980,8 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   uniquePatientList: any[] = [];
   selectedPatient: any = null;
   selectedPrediction: any = null;
+  doctorComments: string = '';
+  doctorRecommendation: string = '';
   chatMessages: ChatMessage[] = [];
   newMessage: string = '';
   chatInterval: any;
@@ -1081,9 +1093,17 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   // Generate a mock confidence based on Stage for UI fidelity
   getConfidence(result: string): number {
     const tier = this.getRiskTier(result);
-    if (tier === 'Low') return Math.floor(Math.random() * (95 - 88 + 1) + 88); 
-    if (tier === 'Medium') return Math.floor(Math.random() * (85 - 75 + 1) + 75);
-    return Math.floor(Math.random() * (99 - 85 + 1) + 85);
+    if (tier === 'Low') return 94.8; 
+    if (tier === 'Medium') return 88.5;
+    return 98.2;
+  }
+
+  getPendingReports(): MedicalReport[] {
+    return this.patientReports.filter(r => !r.status || r.status === 'Pending');
+  }
+
+  getReviewedReports(): MedicalReport[] {
+    return this.patientReports.filter(r => r.status === 'Reviewed');
   }
 
   getGenderStr(id: number): string {
@@ -1121,6 +1141,15 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     this.chatInterval = setInterval(() => {
       this.loadMessages();
     }, 5000);
+  }
+
+  viewResult(report: MedicalReport) {
+    const pred = this.predictions.find(p => p.patient.id === report.patientId);
+    if (pred) {
+      this.openReview(pred);
+    } else {
+      alert('No clinical assessment found for this patient yet.');
+    }
   }
 
   goBackToDashboard() {
@@ -1261,18 +1290,71 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
 
   // --- ACTIONS ---
   approveCase() {
-    if(!this.selectedPrediction) return;
+    if(!this.selectedPrediction || !this.selectedPatient) return;
+    
+    // 1. Update Prediction Status
     this.predictionService.updatePredictionStatus(this.selectedPrediction.id, 'Completed').subscribe({
       next: () => {
         this.selectedPrediction.status = 'Completed';
-        alert('Case Approved & Completed successfully!');
+        
+        // 2. Update all pending reports for this patient to 'Reviewed'
+        const pendingReports = this.patientReports.filter(r => r.status === 'Pending');
+        pendingReports.forEach(report => {
+          this.reportService.updateReportStatus(report.id, 'Reviewed').subscribe({
+            next: () => report.status = 'Reviewed'
+          });
+        });
+
+        alert('Case Approved & Completed successfully! All associated reports have been marked as Reviewed.');
       },
-      error: () => alert('Error updating status')
+      error: (err) => {
+        console.error('Approval failed', err);
+        alert('Error updating status. Please try again.');
+      }
     });
   }
 
   sendFeedback() {
-    this.reviewTab = 'consult';
+    if(!this.selectedPrediction || !this.selectedPatient) return;
+    
+    if (!this.doctorComments && !this.doctorRecommendation) {
+      alert('Please enter your medical comments or select a recommendation first.');
+      return;
+    }
+
+    const risk = this.getRiskTier(this.selectedPrediction.result);
+    const automatedSummary = `--- AUTOMATED AI ANALYSIS ---
+AI Risk Level: ${risk} (${this.selectedPrediction.result})
+Confidence: ${this.getConfidence(this.selectedPrediction.result)}%
+
+Key Metrics:
+- Hemoglobin: ${this.selectedPrediction.Hemoglobin_Level} g/dL
+- WBC Count: ${this.selectedPrediction.White_Blood_Cell_Count} x10³/µL
+- Tumor Size: ${this.selectedPrediction.Tumor_Size_mm} mm`;
+
+    const fullMessage = `DOCTOR'S ASSESSMENT:
+${this.doctorComments || 'No specific observations provided.'}
+
+RECOMMENDATION:
+${this.doctorRecommendation || 'Standard follow-up required.'}
+
+${automatedSummary}`;
+
+    this.chatService.sendMessage(this.selectedPatient.id, fullMessage).subscribe({
+      next: (msg) => {
+        this.chatMessages.push(msg.data);
+        this.reviewTab = 'consult';
+        alert('Feedback successfully sent using your professional assessment.');
+        
+        // Optional: clear comments after sending
+        this.doctorComments = '';
+        this.doctorRecommendation = '';
+      },
+      error: (err) => {
+        console.error('Failed to send feedback', err);
+        alert('Error sending feedback. Please try again.');
+      }
+    });
   }
 
   requestInfo() {
@@ -1290,6 +1372,7 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     });
   }
   assessFromDashboard(report: MedicalReport) {
+    this.selectedReportForAssessment = report;
     if (report.patient) {
       this.selectedPatient = { ...report.patient, id: report.patientId };
       this.loadPatientReports(); // Refresh for the assessment form reference
@@ -1365,21 +1448,34 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     };
 
     this.predictionService.predict(payload).subscribe({
-      next: (res) => {
-        this.predictionResult = res.prediction;
+      next: (prediction) => {
         this.submittingAssessment = false;
-        alert(`Assessment completed! The result "${this.predictionResult}" has been sent directly to ${this.selectedPatient.firstName}'s dashboard.`);
+        
+        // Mark report as reviewed if applicable
+        if (this.selectedReportForAssessment) {
+          this.reportService.updateReportStatus(this.selectedReportForAssessment.id, 'Reviewed').subscribe({
+            next: () => {
+              this.loadAllReports();
+              this.selectedReportForAssessment = null;
+            }
+          });
+        }
+
+        // Navigate immediately to the new prediction review page
+        this.openReview(prediction);
         this.loadPredictions();
       },
       error: (err) => {
         this.submittingAssessment = false;
         console.error(err);
-        alert('Prediction failed. Please check the clinical data.');
+        const errMsg = err?.error?.error || 'Prediction failed. Please check the clinical data.';
+        alert(errMsg);
       }
     });
   }
 
   autoFillFromReport(report: MedicalReport) {
+    this.selectedReportForAssessment = report;
     this.openAssessmentForm();
     
     this.reportService.parseReport(report.id).subscribe({
@@ -1410,6 +1506,22 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  deleteReport(report: MedicalReport): void {
+    if (confirm(`Are you sure you want to delete the report "${report.fileName}"? This action cannot be undone.`)) {
+      this.reportService.deleteReport(report.id).subscribe({
+        next: () => {
+          this.patientReports = this.patientReports.filter(r => r.id !== report.id);
+          alert('Report deleted successfully.');
+        },
+        error: (err) => {
+          console.error('Delete failed', err);
+          alert('Failed to delete report. Please try again.');
+        }
+      });
+    }
+  }
+
 
 
   onInputFocus(event: any) {

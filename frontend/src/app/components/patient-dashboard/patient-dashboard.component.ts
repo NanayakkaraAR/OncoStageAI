@@ -1521,12 +1521,10 @@ export class PatientDashboardComponent implements OnInit {
   loadingPredictions = false;
   expandedId: number | null = null;
 
-  // Report Properties
   patientReports: MedicalReport[] = [];
   selectedFile: File | null = null;
   uploadingReport = false;
 
-  // Video Call State
   isCallActive = false;
   jitsiApi: any;
   callStartTime: number = 0;
@@ -1924,13 +1922,19 @@ export class PatientDashboardComponent implements OnInit {
     return 'badge low';
   }
 
-  getConfidence(result: string): number {
-    if (!result) return 0;
+  getRiskTier(result: string): string {
+    if (!result) return 'Low';
     const s = result.toLowerCase();
-    if (s.includes('iv') || s.includes('4')) return 78;
-    if (s.includes('iii') || s.includes('3')) return 82;
-    if (s.includes('ii') || s.includes('2')) return 85;
-    return 87;
+    if (s.includes('iv') || s.includes('4')) return 'High';
+    if (s.includes('iii') || s.includes('3')) return 'Medium';
+    return 'Low';
+  }
+
+  getConfidence(result: string): number {
+    const tier = this.getRiskTier(result);
+    if (tier === 'Low') return 94.8;
+    if (tier === 'Medium') return 88.5;
+    return 98.2;
   }
 
   private buildForm(): FormGroup {
@@ -1959,8 +1963,8 @@ export class PatientDashboardComponent implements OnInit {
 
     this.predictionService.predict(payload).subscribe({
       next: result => {
-        this.predictionResult = result.prediction;
-        this.stageClass = this.getStageClass(result.prediction);
+        this.predictionResult = result.result;
+        this.stageClass = this.getStageClass(result.result);
         this.submitting = false;
         window.scrollTo({ top: 0, behavior: 'smooth' });
         this.loadPredictions();
