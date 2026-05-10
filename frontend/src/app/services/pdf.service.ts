@@ -48,10 +48,12 @@ export class PdfService {
    * @param patientName The name of the patient
    * @param doctorName The name of the doctor
    * @param result The prediction result
+   * @param fieldGroups Optional field groups for better labeling and organization
    */
-  generateAssessmentPdf(assessmentData: any, patientName: string, doctorName: string, result?: string): void {
+  generateAssessmentPdf(assessmentData: any, patientName: string, doctorName: string, result?: string, fieldGroups?: any[]): void {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const date = new Date().toLocaleDateString();
     
     // Header
     doc.setFillColor(14, 165, 233); // #0ea5e9
@@ -59,59 +61,111 @@ export class PdfService {
     
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
     doc.text('OncoStage AI', 20, 25);
     doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
     doc.text('Clinical Assessment Report', 20, 32);
     
-    // Body
-    doc.setTextColor(0, 0, 0);
+    // Date
+    doc.setTextColor(51, 65, 85);
     doc.setFontSize(10);
-    const date = new Date().toLocaleDateString();
-    doc.text(`Date: ${date}`, pageWidth - 60, 50);
+    doc.text(`Date: ${date}`, pageWidth - 50, 50, { align: 'right' });
     
     // Patient & Doctor Info
+    doc.setTextColor(15, 23, 42);
     doc.setFont('helvetica', 'bold');
-    doc.text('Patient Information', 20, 55);
+    doc.text('Patient Information', 20, 60);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Name: ${patientName}`, 20, 62);
+    doc.text(`Name: ${patientName}`, 20, 68);
     
     doc.setFont('helvetica', 'bold');
-    doc.text('Practitioner Information', pageWidth / 2, 55);
+    doc.text('Practitioner Information', pageWidth / 2, 60);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Doctor: Dr. ${doctorName}`, pageWidth / 2, 62);
+    doc.text(`Doctor: Dr. ${doctorName}`, pageWidth / 2, 68);
     
+    doc.setDrawColor(203, 213, 225);
     doc.setLineWidth(0.5);
-    doc.line(20, 70, pageWidth - 20, 70);
+    doc.line(20, 78, pageWidth - 20, 78);
     
-    // Clinical Data
+    // Clinical Data Summary Title
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('Clinical Data Summary', 20, 80);
+    doc.text('Clinical Data Summary', 20, 90);
     
+    let y = 100;
     doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
     
-    let y = 90;
-    const items = Object.entries(assessmentData);
-    
-    items.forEach(([key, value]) => {
-      if (typeof value !== 'object' && key !== 'patientId' && key !== 'doctorId') {
-        const label = key.replace(/_/g, ' ');
-        doc.text(`${label}:`, 25, y);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`${value}`, 80, y);
-        doc.setFont('helvetica', 'normal');
-        y += 8;
-        
-        if (y > 270) {
-          doc.addPage();
-          y = 20;
+    if (fieldGroups && fieldGroups.length > 0) {
+      // Use field groups to organize data
+      fieldGroups.forEach(group => {
+        // Check if group has any fields with data
+        const groupFieldsWithData = group.fields.filter((f: any) => {
+          const val = assessmentData[f.key];
+          return val !== undefined && val !== null && val.toString().trim() !== '';
+        });
+
+        if (groupFieldsWithData.length > 0) {
+          // Check for page break before group title
+          if (y > 250) {
+            doc.addPage();
+            y = 20;
+          }
+
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(14, 165, 233);
+          doc.text(group.label, 20, y);
+          y += 7;
+          doc.setTextColor(15, 23, 42);
+          doc.setFont('helvetica', 'normal');
+
+          groupFieldsWithData.forEach((field: any) => {
+            if (y > 270) {
+              doc.addPage();
+              y = 20;
+            }
+            const val = assessmentData[field.key];
+            const displayVal = (field.isBinary || field.label.includes('0/1')) 
+              ? (val == 1 ? 'Yes' : 'No') 
+              : val;
+            
+            doc.text(`${field.label}:`, 25, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${displayVal}`, 100, y);
+            doc.setFont('helvetica', 'normal');
+            y += 7;
+          });
+          y += 5; // Space between groups
         }
-      }
-    });
+      });
+    } else {
+      // Fallback: Simple list of items
+      const items = Object.entries(assessmentData);
+      items.forEach(([key, value]) => {
+        if (typeof value !== 'object' && key !== 'patientId' && key !== 'doctorId' && value !== null && value !== undefined && value.toString().trim() !== '') {
+          if (y > 270) {
+            doc.addPage();
+            y = 20;
+          }
+          const label = key.replace(/_/g, ' ');
+          doc.text(`${label}:`, 25, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${value}`, 80, y);
+          doc.setFont('helvetica', 'normal');
+          y += 7;
+        }
+      });
+    }
     
     if (result) {
-      y += 10;
+      // Ensure prediction result is on a new page if needed or has space
+      if (y > 240) {
+        doc.addPage();
+        y = 20;
+      } else {
+        y += 10;
+      }
+      
       doc.setFillColor(240, 253, 244); // light green
       doc.rect(20, y, pageWidth - 40, 30, 'F');
       doc.setDrawColor(34, 197, 94); // green
@@ -139,7 +193,8 @@ export class PdfService {
       );
     }
     
-    doc.save(`Assessment_${patientName.replace(/\s+/g, '_')}_${date}.pdf`);
+    const fileName = `Assessment_${patientName.replace(/\s+/g, '_')}_${date.replace(/\//g, '-')}.pdf`;
+    doc.save(fileName);
   }
 
   /**
