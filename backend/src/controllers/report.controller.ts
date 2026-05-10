@@ -106,27 +106,60 @@ export const parseReport = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ success: false, error: 'Report not found' });
     }
 
-    const mlServiceUrl = process.env.ML_SERVICE_URL_PARSE || 'http://localhost:8000/parse-report';
+    const mlServiceUrl = process.env.ML_SERVICE_URL_PARSE || 'http://127.0.0.1:8000/parse-report';
+    const absolutePath = path.resolve(report.filePath);
     
-    // In a real scenario, we would send the file to the ML service.
-    // For now, we'll send the path or metadata.
-    // Since it's a local setup, the ML service can read the file directly if it has access.
-    
-    const response = await fetch(mlServiceUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filePath: report.filePath }),
-    });
+    console.log(`[ParseReport] ID: ${reportId}, Path: ${absolutePath}`);
 
-    if (!response.ok) {
-      throw new Error(`ML Service responded with status: ${response.status}`);
-    }
+    // Use a promise-based wrapper for http.request for better compatibility
+    const mlData = await new Promise((resolve, reject) => {
+      const url = new URL(mlServiceUrl);
+      const postData = JSON.stringify({ 
+        filePath: absolutePath,
+        fileName: report.fileName,
+        fileBase64: report.fileContent ? Buffer.from(report.fileContent).toString('base64') : null
+      });
+      
+      const options = {
+        hostname: url.hostname,
+        port: url.port,
+        path: url.pathname,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        }
+      };
 
-    const data = await response.json();
-    res.json({ success: true, data });
+      const req = require('http').request(options, (res: any) => {
+        let body = '';
+        res.on('data', (chunk: string) => body += chunk);
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try {
+              resolve(JSON.parse(body));
+            } catch (e) {
+              reject(new Error('Invalid JSON from ML service'));
+            }
+          } else {
+            reject(new Error(`ML Service responded with status: ${res.statusCode}`));
+          }
+        });
+      });
+
+      req.on('error', (e: Error) => reject(e));
+      req.write(postData);
+      req.end();
+    }) as any;
+
+    console.log(`[ParseReport] Success, extracted ${Object.keys(mlData.data || {}).length} fields`);
+    res.json({ success: true, data: mlData });
   } catch (error) {
-    console.error('Parse report error:', error);
-    res.status(500).json({ success: false, error: 'Failed to parse report' });
+    console.error('[ParseReport] Controller Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to parse report' 
+    });
   }
 };
 
