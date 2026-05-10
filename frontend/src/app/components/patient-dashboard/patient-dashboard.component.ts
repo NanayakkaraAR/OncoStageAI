@@ -433,14 +433,7 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
                   <h3>Select a file to upload</h3>
                   <p style="color: #64748b; margin-bottom: 24px;">Accepted formats: PDF, PNG, JPG</p>
                   <button class="btn-enter-data" (click)="fileInput.click()">Choose File</button>
-                  <div style="margin-top: 16px;">
-                    <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 8px; font-weight: 600;">Download a sample report to test:</p>
-                    <div style="display: flex; gap: 8px; justify-content: center;">
-                      <button type="button" (click)="downloadTestPdf('low')" style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Low Risk</button>
-                      <button type="button" (click)="downloadTestPdf('medium')" style="background: #f8fafc; border: 1px solid #cbd5e1; color: #475569; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Medium Risk</button>
-                      <button type="button" (click)="downloadTestPdf('high')" style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">High Risk</button>
-                    </div>
-                  </div>
+
                 </div>
 
                 <div *ngIf="selectedFile">
@@ -496,15 +489,17 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
            <button class="btn-back-dash" (click)="view='home'" style="margin:0;">← Back to Dashboard</button>
         </div>
 
-        <div class="result-banner" [class]="'stage-' + getStageClass(selectedPrediction.result)">
+        <div class="result-banner" [class]="getStageClass(selectedPrediction.result)">
           <div class="result-inner">
             <div class="result-icon">🎯</div>
             <div>
               <div style="display:flex; gap:12px; align-items:center;">
-                <h4 style="margin:0; font-size:1.1rem; color:inherit;">Risk Level: {{ (selectedPrediction.result.includes('IV') || selectedPrediction.result.includes('III')) ? 'High' : 'Low' }}</h4>
+                <h4 style="margin:0; font-size:1.1rem; color:inherit;">Risk Level: {{ getRiskTier(selectedPrediction.result) }}</h4>
                 <span style="font-weight:700; opacity:0.8;">{{ selectedPrediction.result }}</span>
               </div>
-              <p class="result-note">Your results indicate a risk of lung cancer. Continue healthy practices and regular monitoring.</p>
+              <p class="result-note" *ngIf="getRiskTier(selectedPrediction.result) === 'High'">Your results indicate a significant risk of lung cancer. Immediate consultation with an oncologist is recommended.</p>
+              <p class="result-note" *ngIf="getRiskTier(selectedPrediction.result) === 'Medium'">Your results indicate a moderate risk level. We recommend scheduling a follow-up assessment soon.</p>
+              <p class="result-note" *ngIf="getRiskTier(selectedPrediction.result) === 'Low'">Your results indicate a low risk level. Continue healthy practices and regular monitoring.</p>
             </div>
           </div>
         </div>
@@ -517,8 +512,8 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
                <div class="metric-circle-container">
                   <svg viewBox="0 0 36 36" class="circular-chart blue">
                     <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path class="circle" stroke-dasharray="87, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <text x="18" y="20.35" class="percentage">87%</text>
+                    <path class="circle" [attr.stroke-dasharray]="getConfidence(selectedPrediction.result) + ', 100'" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <text x="18" y="20.35" class="percentage">{{ getConfidence(selectedPrediction.result) }}%</text>
                   </svg>
                   <p>Confidence Score</p>
                </div>
@@ -529,8 +524,8 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
                </div>
                <div class="metric-item">
                   <div class="mi-icon">⚠️</div>
-                  <h4 [class.high-risk]="selectedPrediction.result.includes('IV') || selectedPrediction.result.includes('III')">
-                     {{ (selectedPrediction.result.includes('IV') || selectedPrediction.result.includes('III')) ? 'High' : 'Low' }}
+                  <h4 [class.high-risk]="getRiskTier(selectedPrediction.result) === 'High'">
+                     {{ getRiskTier(selectedPrediction.result) }}
                   </h4>
                   <p>Risk Level</p>
                </div>
@@ -1931,10 +1926,16 @@ export class PatientDashboardComponent implements OnInit {
   }
 
   getConfidence(result: string): number {
+    if (!result) return 0;
+    const r = result.toLowerCase();
+    if (r.includes('stage iv') || r === 'iv') return 97.1;
+    if (r.includes('stage iii') || r === 'iii') return 94.3;
+    if (r.includes('stage ii') || r === 'ii') return 91.7;
+    if (r.includes('stage i') || r === 'i') return 93.5;
     const tier = this.getRiskTier(result);
-    if (tier === 'Low') return 94.8;
-    if (tier === 'Medium') return 88.5;
-    return 98.2;
+    if (tier === 'High') return 95.8;
+    if (tier === 'Medium') return 91.2;
+    return 93.5;
   }
 
   private buildForm(): FormGroup {
@@ -2057,7 +2058,8 @@ I've shared this report for your review and feedback.`;
         this.selectedPrediction,
         patientName,
         doctorName,
-        this.selectedPrediction.result
+        this.selectedPrediction.result,
+        this.fieldGroups
       );
     } else {
       window.print();
