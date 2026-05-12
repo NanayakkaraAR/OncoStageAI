@@ -31,6 +31,12 @@ export const getAssignedDoctor = async (req: AuthRequest, res: Response) => {
   try {
     const patientId = req.user!.id;
 
+    const now = new Date();
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    const weekStart = new Date(new Date(now).setDate(diff));
+    weekStart.setHours(0, 0, 0, 0);
+
     const rows = await prisma.$queryRaw<
       { id: number; firstName: string; lastName: string; email: string }[]
     >`
@@ -38,7 +44,7 @@ export const getAssignedDoctor = async (req: AuthRequest, res: Response) => {
              (SELECT COUNT(*)::int FROM messages WHERE "senderId" = u.id AND "receiverId" = ${patientId} AND "isRead" = false) as "unreadCount"
       FROM doctor_patient_assignments dpa
       JOIN users u ON u.id = dpa."doctorId"
-      WHERE dpa."patientId" = ${patientId}
+      WHERE dpa."patientId" = ${patientId} AND dpa."weekStartDate" = ${weekStart}
       LIMIT 1
     `;
 
@@ -63,10 +69,29 @@ export const assignDoctor = async (req: AuthRequest, res: Response) => {
     }
 
     const now = new Date();
-    const day = now.getDay(); 
+    const day = now.getDay();
     const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-    const weekStart = new Date(now.setDate(diff));
+    const weekStart = new Date(new Date(now).setDate(diff));
     weekStart.setHours(0, 0, 0, 0);
+
+    // 1. Cleanup: Remove all appointments from previous weeks
+    await prisma.$executeRaw`DELETE FROM doctor_patient_assignments WHERE "weekStartDate" < ${weekStart}`;
+
+    // 2. Check Capacity: Ensure doctor doesn't exceed 10 appointments this week
+    // Exclude the current patient if they are already assigned to this doctor
+    const currentCountRows = await prisma.$queryRaw<{ count: number }[]>`
+      SELECT COUNT(*)::int as count FROM doctor_patient_assignments 
+      WHERE "doctorId" = ${Number(doctorId)} 
+      AND "weekStartDate" = ${weekStart}
+      AND "patientId" != ${patientId}
+    `;
+    
+    if (currentCountRows[0].count >= 10) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'This doctor has reached the maximum weekly limit of 10 appointments. Please try again next week or choose another doctor.' 
+      });
+    }
 
     await prisma.$executeRaw`
       INSERT INTO doctor_patient_assignments ("doctorId", "patientId", "assignedAt", "weekStartDate")
@@ -90,16 +115,20 @@ export const assignDoctor = async (req: AuthRequest, res: Response) => {
 
 export const getDoctors = async (req: AuthRequest, res: Response) => {
   try {
-    const doctors = await prisma.user.findMany({
-      where: { role: 'DOCTOR', isActive: true },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-      },
-      orderBy: { firstName: 'asc' },
-    });
+    const now = new Date();
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    const weekStart = new Date(new Date(now).setDate(diff));
+    weekStart.setHours(0, 0, 0, 0);
+
+    const doctors = await prisma.$queryRaw<any[]>`
+      SELECT u.id, u."firstName", u."lastName", u.email,
+             (SELECT COUNT(*)::int FROM doctor_patient_assignments dpa 
+              WHERE dpa."doctorId" = u.id AND dpa."weekStartDate" = ${weekStart}) as "appointmentCount"
+      FROM users u
+      WHERE u.role = 'DOCTOR' AND u."isActive" = true
+      ORDER BY u."firstName" ASC
+    `;
     res.json({ success: true, data: doctors });
   } catch (error) {
     console.error('Get doctors error:', error);
@@ -121,7 +150,7 @@ export const submitPrediction = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ success: false, error: 'doctorId is required' });
     }
 
-    const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000/predict';
+    const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://127.0.0.1:8000/predict';
     
     // Sanitize featureData for ML Service (ensure all numbers)
     const sanitizedFeatures: any = {};
@@ -132,33 +161,52 @@ export const submitPrediction = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    console.log('Sending to ML Service:', sanitizedFeatures);
+    console.log('[Prediction] Sending to ML Service:', sanitizedFeatures);
 
-    let mlResponse;
+    let mlResult: any;
     try {
-      mlResponse = await fetch(mlServiceUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sanitizedFeatures),
+      mlResult = await new Promise((resolve, reject) => {
+        const url = new URL(mlServiceUrl);
+        const postData = JSON.stringify(sanitizedFeatures);
+        
+        const options = {
+          hostname: url.hostname,
+          port: url.port,
+          path: url.pathname,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(postData)
+          }
+        };
+
+        const req = require('http').request(options, (res: any) => {
+          let body = '';
+          res.on('data', (chunk: string) => body += chunk);
+          res.on('end', () => {
+            if (res.statusCode >= 200 && res.statusCode < 300) {
+              try {
+                resolve(JSON.parse(body));
+              } catch (e) {
+                reject(new Error('Invalid JSON from ML service'));
+              }
+            } else {
+              reject(new Error(`AI Service responded with status: ${res.statusCode}`));
+            }
+          });
+        });
+
+        req.on('error', (e: Error) => reject(e));
+        req.write(postData);
+        req.end();
       });
-    } catch (fetchErr) {
-      console.error('ML Service connection error:', fetchErr);
+    } catch (err: any) {
+      console.error('[Prediction] ML Service error:', err);
       return res.status(502).json({ 
         success: false, 
-        error: 'Could not connect to AI Service. Please ensure the ML backend is running.' 
+        error: `Could not connect to AI Service: ${err.message}` 
       });
     }
-
-    if (!mlResponse.ok) {
-      const errorText = await mlResponse.text();
-      console.error('ML Service Error Response:', errorText);
-      return res.status(mlResponse.status).json({ 
-        success: false, 
-        error: `AI Service Error: ${errorText || mlResponse.statusText}` 
-      });
-    }
-
-    const mlResult = await mlResponse.json() as any;
 
     const prediction = await prisma.prediction.create({
       data: {
@@ -187,8 +235,8 @@ export const submitPrediction = async (req: AuthRequest, res: Response) => {
         Glucose_Level: Number(featureData.Glucose_Level) || 0,
         Cholesterol_Level: Number(featureData.Cholesterol_Level) || 0,
         Bilirubin_Level: Number(featureData.Bilirubin_Level) || 0,
-        AST_Level: Number(featureData.Aspartate_Aminotransferase_Level ?? featureData.AST_Level ?? 0),
-        ALT_Level: Number(featureData.Alanine_Aminotransferase_Level ?? featureData.ALT_Level ?? 0),
+        Aspartate_Aminotransferase_Level: Number(featureData.Aspartate_Aminotransferase_Level ?? featureData.AST_Level ?? 0),
+        Alanine_Aminotransferase_Level: Number(featureData.Alanine_Aminotransferase_Level ?? featureData.ALT_Level ?? 0),
         Sodium_Level: Number(featureData.Sodium_Level) || 0,
         Potassium_Level: Number(featureData.Potassium_Level) || 0,
         Chloride_Level: Number(featureData.Chloride_Level) || 0,
@@ -286,6 +334,12 @@ export const getDoctorPatients = async (req: AuthRequest, res: Response) => {
   try {
     const doctorId = req.user!.id;
 
+    const now = new Date();
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    const weekStart = new Date(new Date(now).setDate(diff));
+    weekStart.setHours(0, 0, 0, 0);
+
     const rows = await prisma.$queryRaw<
       { id: number; firstName: string; lastName: string; email: string }[]
     >`
@@ -293,7 +347,7 @@ export const getDoctorPatients = async (req: AuthRequest, res: Response) => {
              (SELECT COUNT(*)::int FROM messages WHERE "senderId" = u.id AND "receiverId" = ${doctorId} AND "isRead" = false) as "unreadCount"
       FROM doctor_patient_assignments dpa
       JOIN users u ON u.id = dpa."patientId"
-      WHERE dpa."doctorId" = ${doctorId}
+      WHERE dpa."doctorId" = ${doctorId} AND dpa."weekStartDate" = ${weekStart}
     `;
 
     res.json({ success: true, data: rows });

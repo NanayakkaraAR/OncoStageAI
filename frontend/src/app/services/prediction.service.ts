@@ -23,8 +23,8 @@ export interface PatientPrediction {
   LDH_Level: number;
   Creatinine_Level: number;
   Glucose_Level: number;
-  AST_Level: number;
-  ALT_Level: number;
+  Aspartate_Aminotransferase_Level: number;
+  Alanine_Aminotransferase_Level: number;
   Sodium_Level: number;
   Potassium_Level: number;
   Phosphorus_Level: number;
@@ -60,8 +60,8 @@ export interface PatientOwnPrediction {
   LDH_Level: number;
   Creatinine_Level: number;
   Glucose_Level: number;
-  AST_Level: number;
-  ALT_Level: number;
+  Aspartate_Aminotransferase_Level: number;
+  Alanine_Aminotransferase_Level: number;
   Sodium_Level: number;
   Potassium_Level: number;
   Phosphorus_Level: number;

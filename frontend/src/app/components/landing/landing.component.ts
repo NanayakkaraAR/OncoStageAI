@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { ReviewService } from '../../services/review.service';
 
 @Component({
   selector: 'app-landing',
@@ -10,7 +11,28 @@ import { Router } from '@angular/router';
   styleUrl: './landing.component.css'
 })
 export class LandingComponent {
-  constructor(private router: Router) {}
+  reviews: any[] = [];
+
+  constructor(
+    private router: Router,
+    private reviewService: ReviewService
+  ) {}
+
+  ngOnInit() {
+    this.fetchReviews();
+  }
+
+  fetchReviews() {
+    this.reviewService.getLandingReviews().subscribe({
+      next: (data) => {
+        this.reviews = data;
+      },
+      error: (err) => {
+        console.error('Error fetching reviews:', err);
+      }
+    });
+  }
+
 
   onNavigate(page: string): void {
     if (page === 'login') {

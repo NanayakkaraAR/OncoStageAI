@@ -9,6 +9,8 @@ import { Doctor } from '../../services/doctor.service';
 import { ChatService, ChatMessage } from '../../services/chat.service';
 import { ReportService, MedicalReport } from '../../services/report.service';
 import { PdfService } from '../../services/pdf.service';
+import { ReviewService } from '../../services/review.service';
+
 
 declare var JitsiMeetExternalAPI: any;
 
@@ -27,6 +29,36 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
   template: `
     <div class="page-wrapper">
+      <!-- ═══════════════ REVIEW MODAL ═══════════════ -->
+      <div class="modal-overlay" *ngIf="showReviewModal">
+        <div class="modal-content review-modal">
+          <div class="modal-header">
+            <h3>Review Your Consultation</h3>
+            <button class="close-btn" (click)="showReviewModal = false">✕</button>
+          </div>
+          <div class="modal-body">
+            <p>How was your session with Dr. {{ selectedDoctor?.firstName }} {{ selectedDoctor?.lastName }}?</p>
+            <form [formGroup]="reviewForm" (ngSubmit)="submitReview()">
+              <div class="rating-input">
+                <span *ngFor="let star of [1,2,3,4,5]" 
+                      (click)="setRating(star)" 
+                      [class.active]="reviewForm.get('rating')?.value >= star">★</span>
+              </div>
+              <div class="form-field">
+                <label>Your Feedback</label>
+                <textarea formControlName="comment" placeholder="Describe your experience..."></textarea>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn-cancel" (click)="showReviewModal = false">Skip</button>
+                <button type="submit" class="btn-submit" [disabled]="reviewForm.invalid || submittingReview">
+                  {{ submittingReview ? 'Submitting...' : 'Submit Review' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
       <!-- ═══════════════ JITSI OVERLAY ═══════════════ -->
       <div class="jitsi-overlay" *ngIf="isCallActive">
         <div id="jitsi-container"></div>
@@ -168,7 +200,10 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
                   <div class="comment-text">Results shared with Dr. {{ latestPrediction.doctor.firstName }} {{ latestPrediction.doctor.lastName }}. Continue monitoring and maintain a healthy lifestyle.</div>
                 </div>
               </div>
-              <button class="btn-view-report" (click)="openReportDetail(latestPrediction)">View Detailed Report</button>
+              <div style="display: flex; gap: 12px; margin-top: 16px;">
+                <button class="btn-view-report" (click)="openReportDetail(latestPrediction)" style="margin-top: 0; flex: 1;">View Detailed Report</button>
+                <button class="btn-review-now" (click)="triggerReview(latestPrediction.doctor)" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #14b8a6; background: #f0fdfa; color: #14b8a6; font-weight: 600; cursor: pointer;">Review Doctor</button>
+              </div>
             </div>
 
             <!-- Empty state -->
@@ -378,9 +413,14 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
                             <div class="comment-text">This prediction was generated based on the clinical data you submitted. Results shared with Dr. {{ p.doctor.firstName }} {{ p.doctor.lastName }}.</div>
                           </div>
                         </div>
-                        <button class="btn-action action-new" style="white-space:nowrap; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem;" (click)="openReportDetail(p)">
-                          View Detailed Report
-                        </button>
+                        <div style="display:flex; gap:12px;">
+                          <button class="btn-action action-new" style="white-space:nowrap; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem;" (click)="openReportDetail(p)">
+                            View Detailed Report
+                          </button>
+                          <button class="btn-action action-review" style="white-space:nowrap; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; background: #f0fdfa; color: #14b8a6; border: 1px solid #14b8a6;" (click)="triggerReview(p.doctor)">
+                            Review Doctor
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -662,6 +702,7 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
               <div class="chat-input-area" *ngIf="viewingDoctor?.id === selectedDoctor?.id">
                  <input type="text" [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" placeholder="Type a message..." />
                  <button (click)="sendMessage()">Send</button>
+                 <button (click)="triggerReview(selectedDoctor)" style="background: #ef4444; margin-left: 8px;">End Session</button>
               </div>
               <div class="chat-read-only" *ngIf="viewingDoctor && viewingDoctor.id !== selectedDoctor?.id">
                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -1488,6 +1529,55 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
       .header-nav { display: none; }
       .form-card { padding: 24px; }
     }
+
+    /* Review Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+    .modal-content.review-modal {
+      background: #fff;
+      width: 100%;
+      max-width: 500px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    .modal-header {
+      padding: 24px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 { margin: 0; font-size: 1.25rem; color: #1e293b; }
+    .close-btn { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #64748b; }
+    .modal-body { padding: 24px; }
+    .rating-input {
+      display: flex;
+      gap: 8px;
+      font-size: 2.5rem;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .rating-input span { cursor: pointer; color: #e2e8f0; transition: color 0.2s; }
+    .rating-input span.active { color: #fbbf24; }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .btn-cancel { background: #f1f5f9; color: #475569; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .btn-submit { background: #0d9488; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .review-modal textarea { width: 100%; min-height: 100px; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 8px; }
   `]
 })
 export class PatientDashboardComponent implements OnInit {
@@ -1512,6 +1602,12 @@ export class PatientDashboardComponent implements OnInit {
 
   view: DashView = 'home';
   predictions: PatientOwnPrediction[] = [];
+  
+  // Review state
+  showReviewModal = false;
+  reviewForm!: FormGroup;
+  submittingReview = false;
+
   stats: PatientStats | null = null;
   loadingPredictions = false;
   expandedId: number | null = null;
@@ -1592,8 +1688,8 @@ export class PatientDashboardComponent implements OnInit {
       fields: [
         { key: 'Albumin_Level', label: 'Albumin (g/dL)', min: 1, max: 6 },
         { key: 'Bilirubin_Level', label: 'Bilirubin (mg/dL)', min: 0.1, max: 10 },
-        { key: 'AST_Level', label: 'AST (U/L)', min: 1, max: 500 },
-        { key: 'ALT_Level', label: 'ALT (U/L)', min: 1, max: 500 },
+        { key: 'Aspartate_Aminotransferase_Level', label: 'AST (U/L)', min: 1, max: 500 },
+        { key: 'Alanine_Aminotransferase_Level', label: 'ALT (U/L)', min: 1, max: 500 },
         { key: 'Alkaline_Phosphatase_Level', label: 'Alkaline Phosphatase (U/L)', min: 10, max: 1000 },
         { key: 'GGT_Level', label: 'GGT (U/L)', min: 1, max: 1000 },
         { key: 'Total_Protein_Level', label: 'Total Protein (g/dL)', min: 3, max: 10 },
@@ -1653,12 +1749,18 @@ export class PatientDashboardComponent implements OnInit {
     private chatService: ChatService,
     private reportService: ReportService,
     private router: Router,
-    private pdfService: PdfService
+    private pdfService: PdfService,
+    private reviewService: ReviewService
   ) {
     this.currentUser = this.authService.getCurrentUser();
     const nav = this.router.getCurrentNavigation();
     this.selectedDoctor = nav?.extras?.state?.['selectedDoctor'] ?? null;
     this.form = this.buildForm();
+    
+    this.reviewForm = this.fb.group({
+      rating: [5, [Validators.required, Validators.min(1), Validators.max(5)]],
+      comment: ['', Validators.required]
+    });
   }
 
   ngOnInit(): void {
@@ -2168,6 +2270,10 @@ I've shared this report for your review and feedback.`;
       this.jitsiApi.dispose();
       this.jitsiApi = null;
     }
+    // Show review modal after call ends
+    setTimeout(() => {
+      this.showReviewModal = true;
+    }, 1000);
   }
 
   openConsult() {
@@ -2217,4 +2323,39 @@ I've shared this report for your review and feedback.`;
       error: (err) => console.error(err)
     });
   }
+
+  triggerReview(doctor: any) {
+    this.selectedDoctor = doctor;
+    this.showReviewModal = true;
+    this.reviewForm.reset({ rating: 5, comment: '' });
+  }
+
+  setRating(rating: number) {
+    this.reviewForm.patchValue({ rating });
+  }
+
+  submitReview() {
+    if (this.reviewForm.invalid || !this.selectedDoctor) return;
+    this.submittingReview = true;
+    
+    const reviewData = {
+      doctorId: this.selectedDoctor.id,
+      ...this.reviewForm.value
+    };
+
+    this.reviewService.submitReview(reviewData).subscribe({
+      next: () => {
+        this.submittingReview = false;
+        this.showReviewModal = false;
+        alert('Thank you for your feedback!');
+        this.reviewForm.reset({ rating: 5 });
+      },
+      error: (err) => {
+        this.submittingReview = false;
+        console.error('Error submitting review:', err);
+        alert('Failed to submit review. Please try again.');
+      }
+    });
+  }
 }
+

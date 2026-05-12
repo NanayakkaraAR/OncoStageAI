@@ -630,8 +630,13 @@ declare var JitsiMeetExternalAPI: any;
                           step="any"
                           [formControlName]="f.key"
                           [placeholder]="f.hint || '0'"
+                          [class.invalid-input]="assessmentForm.get(f.key)?.invalid && assessmentForm.get(f.key)?.touched"
                           style="padding:12px; border-radius:8px; border:1px solid #cbd5e1; outline:none; font-family:inherit; transition:border-color 0.2s;"
                         />
+                        <span *ngIf="assessmentForm.get(f.key)?.invalid && assessmentForm.get(f.key)?.touched" 
+                              style="color:#ef4444; font-size:0.75rem; font-weight:600;">
+                          {{ assessmentForm.get(f.key)?.errors?.['required'] ? 'Field is required' : 'Value is out of valid range' }}
+                        </span>
                       </div>
                     </ng-container>
                   </div>
@@ -642,7 +647,7 @@ declare var JitsiMeetExternalAPI: any;
                   <button type="button" class="btn-white-outline" style="width:auto; padding:0 24px; height: 48px; border-color: #2563eb; color: #2563eb;" (click)="downloadAssessmentForm()">
                     Download Assessment PDF
                   </button>
-                  <button type="submit" class="btn-review" style="width:auto; padding:0 48px; height: 48px;" [disabled]="assessmentForm.invalid || submittingAssessment">
+                  <button type="submit" class="btn-review" style="width:auto; padding:0 48px; height: 48px;">
                     <span *ngIf="!submittingAssessment">Generate AI Prediction</span>
                     <span *ngIf="submittingAssessment" class="spinner-sm"></span>
                   </button>
@@ -847,6 +852,8 @@ declare var JitsiMeetExternalAPI: any;
     .chat-bubble { max-width: 70%; padding: 14px 18px; border-radius: 16px; background: #fff; border: 1px solid #e2e8f0; align-self: flex-start; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
     .chat-bubble.mine { align-self: flex-end; background: #2563eb; color: #fff; border: none; }
     .chat-bubble.sys-ring { background: #f0f9ff; border: 1px solid #bae6fd; align-self: center; width: 100%; text-align: center; }
+    .invalid-input { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+    .invalid-input:focus { box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important; }
     .chat-time { display: block; font-size: 0.7rem; margin-top: 6px; opacity: 0.6; text-align: right; }
     .chat-text { font-size: 0.95rem; line-height: 1.5; margin: 0; }
     .chat-input-area { padding: 16px 24px; background: #fff; border-top: 1px solid #e2e8f0; display: flex; gap: 12px; align-items: stretch; }
@@ -1441,7 +1448,16 @@ ${automatedSummary}`;
   }
 
   onAssessmentSubmit() {
-    if (this.assessmentForm.invalid || !this.selectedPatient) return;
+    if (!this.selectedPatient) {
+      alert('Please select a patient before submitting an assessment.');
+      return;
+    }
+
+    if (this.assessmentForm.invalid) {
+      this.assessmentForm.markAllAsTouched();
+      alert('The clinical assessment form is incomplete or contains invalid values. Please check the highlighted fields (red) and ensure all required metrics are within the allowed ranges.');
+      return;
+    }
 
     this.submittingAssessment = true;
     const payload = {
@@ -1479,6 +1495,10 @@ ${automatedSummary}`;
 
   autoFillFromReport(report: MedicalReport) {
     this.selectedReportForAssessment = report;
+    // Ensure the patient is selected so the prediction can be submitted
+    if (!this.selectedPatient || this.selectedPatient.id !== report.patientId) {
+      this.selectedPatient = this.uniquePatientList.find(p => p.id === report.patientId);
+    }
     this.openAssessmentForm();
     
     this.reportService.parseReport(report.id).subscribe({
