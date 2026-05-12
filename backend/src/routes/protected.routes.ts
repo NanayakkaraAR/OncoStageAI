@@ -7,6 +7,10 @@ import { getMessages, sendMessage, getChatPartners } from '../controllers/chat.c
 import { getDoctors, submitPrediction, getDoctorPredictions, getPatientPredictions, getAssignedDoctor, assignDoctor, updatePredictionStatus, getDoctorPatients } from '../controllers/predictions.controller';
 import { getUserSettings, updateProfile, updateNotifications, changePassword } from '../controllers/user.controller';
 import { uploadReport, getPatientReports, getDoctorReports, getAllDoctorReports, parseReport, getReportFile, deleteReport, updateReportStatus } from '../controllers/report.controller';
+import { getAIResponse } from '../controllers/ai-chat.controller';
+import { submitReview } from '../controllers/review.controller';
+
+
 
 const router = Router();
 
@@ -155,4 +159,9 @@ router.get('/doctor-admin/users',
   }
 );
 
+router.post('/ai-chat', authenticateToken, getAIResponse);
+router.post('/reviews', authenticateToken, authorizeRoles('PATIENT'), submitReview);
+
 export default router;
+
+

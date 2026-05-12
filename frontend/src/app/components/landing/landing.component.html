@@ -134,6 +134,49 @@
         <p class="feature-description">Share predictions with healthcare providers for comprehensive care</p>
       </div>
     </div>
+
+    <!-- Reviews Section -->
+    <section class="reviews-section" *ngIf="reviews.length > 0">
+      <div class="section-container">
+        <div class="section-header">
+          <div class="section-badge">Testimonials</div>
+          <h2 class="section-title">What Our Patients Say</h2>
+          <p class="section-subtitle">Real feedback from patients who have embarked on their care journey with us.</p>
+        </div>
+        
+        <div class="reviews-container">
+          <div class="reviews-track">
+            <div class="review-card" *ngFor="let review of reviews; let i = index" [style.animation-delay]="i * 0.1 + 's'">
+              <div class="review-quote-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H15.017C14.4647 8 14.017 8.44772 14.017 9V12C14.017 12.5523 13.5693 13 13.017 13H11.017C10.4647 13 10.017 12.5523 10.017 12V9C10.017 7.34315 11.3601 6 13.017 6H19.017C20.6739 6 22.017 7.34315 22.017 9V15C22.017 17.7614 19.7784 20 17.017 20H14.017V21ZM5.017 21L5.017 18C5.017 16.8954 5.91243 16 7.017 16H10.017C10.5693 16 11.017 15.5523 11.017 15V9C11.017 8.44772 10.5693 8 10.017 8H6.017C5.46472 8 5.017 8.44772 5.017 9V12C5.017 12.5523 4.56929 13 4.017 13H2.017C1.46472 13 1.017 12.5523 1.017 12V9C1.017 7.34315 2.36015 6 4.017 6H10.017C11.6739 6 13.017 7.34315 13.017 9V15C13.017 17.7614 10.7786 20 8.017 20H5.017V21Z"></path>
+                </svg>
+              </div>
+              
+              <div class="review-content">
+                <p class="review-comment">"{{review.comment}}"</p>
+              </div>
+              
+              <div class="review-footer">
+                <div class="review-author">
+                  <div class="author-avatar">{{review.patient.firstName[0]}}{{review.patient.lastName[0]}}</div>
+                  <div class="author-info">
+                    <h4 class="author-name">{{review.patient.firstName}} {{review.patient.lastName}}</h4>
+                    <p class="author-meta">Consulted with Dr. {{review.doctor.lastName}}</p>
+                  </div>
+                </div>
+                <div class="review-rating">
+                  <div class="stars">
+                    <span *ngFor="let star of [1,2,3,4,5]" class="star" [class.filled]="star <= review.rating">★</span>
+                  </div>
+                  <span class="date">{{review.createdAt | date:'MMM d, yyyy'}}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- Footer -->

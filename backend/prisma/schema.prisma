@@ -32,6 +32,8 @@ model User {
   patientPredictions                                                     Prediction[]                 @relation("PatientPredictions")
   doctorReports                                                          Report[]                     @relation("DoctorReports")
   patientReports                                                         Report[]                     @relation("PatientReports")
+  doctorReviews                                                          Review[]                     @relation("DoctorReviews")
+  patientReviews                                                         Review[]                     @relation("PatientReviews")
 
   @@map("users")
 }
@@ -57,14 +59,42 @@ model Prediction {
   Age                        Float
   Gender                     Float
   Country                    Float
+  Ethnicity                  Float    @default(0)
+  Insurance_Type             Float    @default(0)
+  Family_History             Float    @default(0)
+  Blood_Pressure_Systolic    Float    @default(0)
+  Blood_Pressure_Diastolic    Float    @default(0)
+  Blood_Pressure_Pulse       Float    @default(0)
+  Performance_Status         Float    @default(0)
   Smoking_History            Float
-  Tumor_Size_mm              Float
-  Mutation_Status            Float
-  Treatment_Type             Float
-  Survival_Months            Float
   Smoking_Pack_Years         Float
+  Alcohol_Consuming          Float    @default(0)
+  Tumor_Size_mm              Float
+  Tumor_Location             Float    @default(0)
+  Mutation_Status            Float
   Biomarker_Status           Float
+  Survival_Months            Float
+  Treatment_Type             Float    @default(0)
   ECOG_Performance_Status    Float
+  Comorbidity_Diabetes       Float    @default(0)
+  Comorbidity_Hypertension   Float    @default(0)
+  Comorbidity_Heart_Disease  Float    @default(0)
+  Comorbidity_Chronic_Lung_Disease Float @default(0)
+  Comorbidity_Kidney_Disease Float    @default(0)
+  Comorbidity_Autoimmune_Disease Float @default(0)
+  Comorbidity_Other          Float    @default(0)
+  Symptom_Smoking            Float    @default(0)
+  Yellow_Fingers             Float    @default(0)
+  Anxiety                    Float    @default(0)
+  Peer_Pressure              Float    @default(0)
+  Chronic_Disease            Float    @default(0)
+  Fatigue                    Float    @default(0)
+  Allergy                    Float    @default(0)
+  Wheezing                   Float    @default(0)
+  Coughing                   Float    @default(0)
+  Shortness_Of_Breath        Float    @default(0)
+  Swallowing_Difficulty      Float    @default(0)
+  Chest_Pain                 Float    @default(0)
   Hemoglobin_Level           Float
   White_Blood_Cell_Count     Float
   Platelet_Count             Float
@@ -75,8 +105,8 @@ model Prediction {
   Glucose_Level              Float
   Cholesterol_Level          Float
   Bilirubin_Level            Float
-  AST_Level                  Float
-  ALT_Level                  Float
+  Aspartate_Aminotransferase_Level Float    @default(0)
+  Alanine_Aminotransferase_Level  Float    @default(0)
   Sodium_Level               Float
   Potassium_Level            Float
   Chloride_Level             Float
@@ -148,3 +178,17 @@ enum UserRole {
   DOCTOR
   ADMIN
 }
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  patientId  Int
+  doctorId   Int
+  rating     Int
+  comment    String
+  createdAt  DateTime @default(now())
+  doctor     User     @relation("DoctorReviews", fields: [doctorId], references: [id])
+  patient    User     @relation("PatientReviews", fields: [patientId], references: [id])
+
+  @@map("reviews")
+}
+
