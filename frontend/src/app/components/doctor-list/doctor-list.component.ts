@@ -5,6 +5,10 @@ import { DoctorService, Doctor } from '../../services/doctor.service';
 import { AuthService } from '../../services/auth.service';
 import { PredictionService } from '../../services/prediction.service';
 
+export interface DoctorWithCapacity extends Doctor {
+  appointmentCount?: number;
+}
+
 @Component({
   selector: 'app-doctor-list',
   standalone: true,
@@ -47,14 +51,29 @@ import { PredictionService } from '../../services/prediction.service';
           <div
             *ngFor="let doctor of doctors"
             class="doctor-card"
+            [class.full]="(doctor.appointmentCount || 0) >= 10"
             (click)="selectDoctor(doctor)"
           >
             <div class="avatar">{{ doctor.firstName[0] }}{{ doctor.lastName[0] }}</div>
             <div class="doctor-info">
               <h3>Dr. {{ doctor.firstName }} {{ doctor.lastName }}</h3>
               <p class="email">{{ doctor.email }}</p>
+              <div class="capacity-bar-wrap">
+                <div class="capacity-text">
+                  <span>Weekly Capacity</span>
+                  <span [class.text-danger]="(doctor.appointmentCount || 0) >= 10">
+                    {{ doctor.appointmentCount || 0 }}/10
+                  </span>
+                </div>
+                <div class="capacity-bar">
+                  <div class="capacity-fill" 
+                       [style.width.%]="(doctor.appointmentCount || 0) * 10"
+                       [class.bg-danger]="(doctor.appointmentCount || 0) >= 10"></div>
+                </div>
+              </div>
             </div>
-            <div class="select-arrow">→</div>
+            <div class="select-arrow" *ngIf="(doctor.appointmentCount || 0) < 10">→</div>
+            <div class="full-badge" *ngIf="(doctor.appointmentCount || 0) >= 10">FULL</div>
           </div>
         </div>
 
@@ -222,10 +241,44 @@ import { PredictionService } from '../../services/prediction.service';
     }
     .empty-state span { display: block; font-size: 3.5rem; margin-bottom: 16px; filter: grayscale(1); opacity: 0.5; }
     .empty-state p { font-size: 1.1rem; }
+
+    /* Capacity Styles */
+    .capacity-bar-wrap { margin-top: 12px; }
+    .capacity-text {
+      display: flex; justify-content: space-between;
+      font-size: 0.75rem; font-weight: 600; color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .capacity-bar {
+      height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden;
+    }
+    .capacity-fill {
+      height: 100%; background: var(--primary-green); border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    .bg-danger { background: #ef4444 !important; }
+    .text-danger { color: #ef4444 !important; }
+    
+    .doctor-card.full {
+      cursor: not-allowed;
+      border-color: #fee2e2;
+      background: #fafafa;
+    }
+    .doctor-card.full:hover {
+      transform: none;
+      box-shadow: var(--shadow-sm);
+      border-color: #fecaca;
+    }
+    .full-badge {
+      background: #fee2e2; color: #dc2626;
+      font-size: 0.7rem; font-weight: 800;
+      padding: 4px 8px; border-radius: 6px;
+      letter-spacing: 0.05em;
+    }
   `]
 })
 export class DoctorListComponent implements OnInit {
-  doctors: Doctor[] = [];
+  doctors: DoctorWithCapacity[] = [];
   loading = true;
   error: string | null = null;
   currentUser: any;
@@ -281,7 +334,12 @@ export class DoctorListComponent implements OnInit {
     });
   }
 
-  selectDoctor(doctor: Doctor): void {
+  selectDoctor(doctor: DoctorWithCapacity): void {
+    if ((doctor.appointmentCount || 0) >= 10) {
+      this.error = `Dr. ${doctor.lastName} is fully booked for this week. Please select another doctor.`;
+      return;
+    }
+
     this.loading = true;
     this.predictionService.assignDoctor(doctor.id).subscribe({
       next: () => {
@@ -289,10 +347,9 @@ export class DoctorListComponent implements OnInit {
           state: { selectedDoctor: doctor }
         });
       },
-      error: () => {
-        this.router.navigate(['/patient/dashboard'], {
-          state: { selectedDoctor: doctor }
-        });
+      error: (err) => {
+        this.loading = false;
+        this.error = err?.error?.error || 'Failed to assign doctor. They might have just become full.';
       }
     });
   }
