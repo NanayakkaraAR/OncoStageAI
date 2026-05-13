@@ -29,7 +29,7 @@ declare var JitsiMeetExternalAPI: any;
             <span class="brand-box">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             </span>
-            <span class="brand-name">LungCare AI</span>
+            <span class="brand-name">OncoStage AI</span>
           </div>
           <nav class="center-nav">
             <button class="nav-btn" [class.active]="view === 'dashboard'" (click)="view = 'dashboard'">
