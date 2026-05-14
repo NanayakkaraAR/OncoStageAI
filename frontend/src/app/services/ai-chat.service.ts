@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class AiChatService {
-  private apiUrl = `http://localhost:3000/api/ai-chat`;
+  private apiUrl = `/api/ai-chat`;
 
   constructor(private http: HttpClient) { }
 

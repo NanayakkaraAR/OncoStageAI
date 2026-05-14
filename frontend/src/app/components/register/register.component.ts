@@ -23,33 +23,59 @@ export class RegisterComponent {
   errorMessage = '';
   successMessage = '';
   loading = false;
+  isDoctorDomain = false;
+  showPassword = false;
 
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
 
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  onEmailChange(email: string): void {
+    if (email.endsWith('@students.nsbm.ac.lk')) {
+      this.isDoctorDomain = true;
+      this.formData.role = 'DOCTOR';
+    } else {
+      this.isDoctorDomain = false;
+      this.formData.role = 'PATIENT';
+    }
+  }
+
   onSubmit(): void {
     this.errorMessage = '';
     this.successMessage = '';
+    
+    // Validate required fields
+    if (!this.formData.email || !this.formData.password || !this.formData.firstName || !this.formData.lastName) {
+      this.errorMessage = 'Please fill in all required fields';
+      return;
+    }
+
     this.loading = true;
+
+    // Enforce domain rule before submission
+    if (this.formData.email.endsWith('@students.nsbm.ac.lk')) {
+      this.formData.role = 'DOCTOR';
+    }
+
+    console.log('Submitting registration:', this.formData);
 
     this.authService.register(this.formData).subscribe({
       next: (response) => {
+        console.log('Registration successful:', response);
         this.loading = false;
-        this.successMessage = 'Registration successful! Redirecting...';
+        this.successMessage = 'Registration successful! Redirecting to login...';
         
         setTimeout(() => {
-          if (this.formData.role === 'DOCTOR') {
-            this.router.navigate(['/doctor/dashboard']);
-          } else if (this.formData.role === 'ADMIN') {
-            this.router.navigate(['/admin/dashboard']);
-          } else {
-            this.router.navigate(['/patient/dashboard']);
-          }
+          this.router.navigate(['/login']);
         }, 1500);
       },
       error: (error) => {
+        console.error('Registration error:', error);
         this.loading = false;
         this.errorMessage = error.error?.message || 'Registration failed. Please try again.';
       }

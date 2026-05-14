@@ -38,6 +38,8 @@ export interface PatientPrediction {
   Yellow_Fingers: number;
   Swallowing_Difficulty: number;
   status: string;
+  doctorComments?: string;
+  doctorRecommendation?: string;
   updatedAt?: string;
 }
 
@@ -67,6 +69,8 @@ export interface PatientOwnPrediction {
   Phosphorus_Level: number;
   Alkaline_Phosphatase_Level: number;
   status: string;
+  doctorComments?: string;
+  doctorRecommendation?: string;
   updatedAt?: string;
 }
 
@@ -78,7 +82,7 @@ export interface PatientStats {
 
 @Injectable({ providedIn: 'root' })
 export class PredictionService {
-  private apiUrl = 'http://localhost:3000/api';
+  private apiUrl = '/api';
 
   constructor(private http: HttpClient) {}
 
@@ -112,9 +116,13 @@ export class PredictionService {
       .pipe(map(r => r.data));
   }
 
-  updatePredictionStatus(predictionId: number, status: string): Observable<any> {
+  updatePredictionStatus(predictionId: number, status: string, doctorComments?: string, doctorRecommendation?: string): Observable<any> {
     return this.http
-      .patch<{ success: boolean; data: any }>(`${this.apiUrl}/doctor/predictions/${predictionId}/status`, { status })
+      .patch<{ success: boolean; data: any }>(`${this.apiUrl}/doctor/predictions/${predictionId}/status`, { 
+        status, 
+        doctorComments, 
+        doctorRecommendation 
+      })
       .pipe(map(r => r.data));
   }
 

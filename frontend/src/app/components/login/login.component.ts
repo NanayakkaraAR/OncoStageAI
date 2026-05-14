@@ -23,12 +23,57 @@ export class LoginComponent {
   lastName = signal('');
   errorMessage = signal('');
   isSubmitting = signal(false);
+  showPassword = signal(false);
+  showForgotPasswordModal = signal(false);
+  forgotPasswordEmail = '';
+  forgotPasswordMessage = signal('');
 
   constructor(
     private authService: AuthService,
     private predictionService: PredictionService,
     private router: Router
   ) {}
+
+  togglePasswordVisibility(): void {
+    this.showPassword.set(!this.showPassword());
+  }
+
+  openForgotPasswordModal(): void {
+    this.showForgotPasswordModal.set(true);
+    this.forgotPasswordEmail = '';
+    this.forgotPasswordMessage.set('');
+  }
+
+  closeForgotPasswordModal(): void {
+    this.showForgotPasswordModal.set(false);
+    this.forgotPasswordEmail = '';
+    this.forgotPasswordMessage.set('');
+  }
+
+  submitForgotPassword(): void {
+    this.forgotPasswordMessage.set('');
+    
+    if (!this.forgotPasswordEmail) {
+      this.forgotPasswordMessage.set('Please enter your email address');
+      return;
+    }
+
+    this.isSubmitting.set(true);
+
+    this.authService.forgotPassword(this.forgotPasswordEmail).subscribe({
+      next: (response) => {
+        this.isSubmitting.set(false);
+        this.forgotPasswordMessage.set('If an account exists with that email, a password reset link has been sent. Please check your inbox.');
+        setTimeout(() => {
+          this.closeForgotPasswordModal();
+        }, 3000);
+      },
+      error: (error) => {
+        this.isSubmitting.set(false);
+        this.forgotPasswordMessage.set(error.error?.message || 'Failed to process forgot password request. Please try again.');
+      }
+    });
+  }
 
   navigateToLanding(): void {
     this.router.navigate(['/']);
