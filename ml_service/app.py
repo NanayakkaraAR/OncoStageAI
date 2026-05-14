@@ -39,6 +39,11 @@ def predict(patient_data: dict):
         # Convert the dictionary to a DataFrame
         df = pd.DataFrame([patient_data])
         
+        print(f"[Predict] Received {len(patient_data)} features")
+        print(f"[Predict] Expected {len(feature_names)} features")
+        print(f"[Predict] Incoming features: {list(patient_data.keys())}")
+        print(f"[Predict] Expected features: {feature_names[:10]}... (showing first 10)")
+        
         # Ensure all expected features are present (fill missing ones with 0)
         for col in feature_names:
             if col not in df.columns:
@@ -47,15 +52,23 @@ def predict(patient_data: dict):
         # Reorder columns to match the training data
         df = df[feature_names]
         
+        print(f"[Predict] DataFrame shape: {df.shape}")
+        print(f"[Predict] DataFrame dtypes: {df.dtypes.unique()}")
+        
         # Make the prediction
         prediction = model.predict(df)[0]
+        
+        print(f"[Predict] Prediction successful: {prediction}")
         
         return {
             "prediction": str(prediction),
             "status": "success"
         }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        print(f"[Predict] Error: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/parse-report")
 def parse_report(data: dict):

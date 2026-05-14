@@ -19,7 +19,7 @@ export interface MedicalReport {
   providedIn: 'root'
 })
 export class ReportService {
-  private apiUrl = 'http://localhost:3000/api';
+  private apiUrl = '/api';
 
   constructor(private http: HttpClient) {}
 

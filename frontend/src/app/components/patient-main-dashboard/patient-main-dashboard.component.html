@@ -1,9 +1,10 @@
 <div class="page-wrapper">
+  <!-- Top Navigation -->
   <header class="header">
     <div class="header-inner">
       <div class="brand">
         <span class="brand-logo">🫁</span>
-        <span class="brand-name">OncoStage AI</span>
+        <span class="brand-name">LungCare AI</span>
       </div>
       <nav class="main-nav">
         <a routerLink="/patient/dashboard" class="nav-item active">
@@ -62,15 +63,18 @@
         <div class="stat-label">Completed</div>
       </div>
     </div>
-3
+
+    <!-- Action Button -->
     <div class="action-bar">
       <button class="btn-primary" (click)="navigateToAssessment()">
         <span class="btn-icon">⚡</span> Enter Health Data for Prediction
       </button>
     </div>
 
+    <!-- Main Content Grid -->
     <div class="dashboard-grid">
       <div class="main-column">
+        <!-- Latest Prediction -->
         <div class="card latest-prediction">
           <div class="card-header">
             <h3>Latest Prediction Result</h3>
@@ -100,6 +104,7 @@
             </div>
           </div>
 
+          <!-- Doctor Comments -->
           <div class="doctor-comments">
             <div class="comment-header">
               <span class="comment-icon">🩺</span>
@@ -111,6 +116,7 @@
           <button class="btn-outline full-width">View Detailed Report</button>
         </div>
 
+        <!-- Recent History -->
         <div class="card history-card">
           <div class="card-header">
             <h3>Recent Prediction History</h3>
@@ -132,6 +138,7 @@
       </div>
 
       <div class="side-column">
+        <!-- Notifications -->
         <div class="card notifications-card">
           <div class="card-header">
             <h3>
