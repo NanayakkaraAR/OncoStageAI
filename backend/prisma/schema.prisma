@@ -19,6 +19,8 @@ model User {
   updatedAt                                                              DateTime                     @updatedAt
   address                                                                String?
   phoneNumber                                                            String?
+  resetToken                                                             String?
+  resetTokenExpires                                                      DateTime?
   doctorFeedback                                                         Boolean                      @default(true)
   emailNotifications                                                     Boolean                      @default(true)
   predictionAlerts                                                       Boolean                      @default(true)

@@ -173,7 +173,7 @@
         <!-- Forgot Password (Login only) -->
         @if (!showRegister()) {
           <div class="forgot-password">
-            <button type="button" class="forgot-link">
+            <button type="button" class="forgot-link" (click)="openForgotPasswordModal()">
               Forgot Password?
             </button>
           </div>
@@ -201,6 +201,50 @@
       </form>
     </div>
 
+    <!-- Forgot Password Modal -->
+    @if (showForgotPasswordModal()) {
+      <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 32px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); max-width: 400px; width: 90%;">
+          <h2 style="margin: 0 0 16px 0; font-size: 24px; color: #333;">Reset Password</h2>
+          <p style="margin: 0 0 20px 0; color: #666; font-size: 14px;">Enter your email address and we'll send you a link to reset your password.</p>
+
+          @if (forgotPasswordMessage()) {
+            <div style="background-color: #e3f2fd; border: 1px solid #90caf9; color: #1976d2; padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 14px;">
+              {{ forgotPasswordMessage() }}
+            </div>
+          }
+
+          <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Email Address</label>
+            <input
+              type="email"
+              [(ngModel)]="forgotPasswordEmail"
+              name="forgotPasswordEmail"
+              placeholder="your.email@example.com"
+              style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; box-sizing: border-box;"
+            />
+          </div>
+
+          <div style="display: flex; gap: 12px;">
+            <button
+              type="button"
+              (click)="submitForgotPassword()"
+              [disabled]="isSubmitting()"
+              style="flex: 1; padding: 12px; background: #007bff; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; opacity: {{ isSubmitting() ? 0.7 : 1 }};"
+            >
+              {{ isSubmitting() ? 'Sending...' : 'Send Reset Link' }}
+            </button>
+            <button
+              type="button"
+              (click)="closeForgotPasswordModal()"
+              style="flex: 1; padding: 12px; background: #f0f0f0; color: #333; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    }
    
   </div>
 </div>
