@@ -24,11 +24,16 @@ export class RegisterComponent {
   successMessage = '';
   loading = false;
   isDoctorDomain = false;
+  showPassword = false;
 
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
 
   onEmailChange(email: string): void {
     if (email.endsWith('@students.nsbm.ac.lk')) {

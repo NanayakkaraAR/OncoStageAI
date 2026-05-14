@@ -23,12 +23,17 @@ export class LoginComponent {
   lastName = signal('');
   errorMessage = signal('');
   isSubmitting = signal(false);
+  showPassword = signal(false);
 
   constructor(
     private authService: AuthService,
     private predictionService: PredictionService,
     private router: Router
   ) {}
+
+  togglePasswordVisibility(): void {
+    this.showPassword.set(!this.showPassword());
+  }
 
   navigateToLanding(): void {
     this.router.navigate(['/']);
