@@ -14,10 +14,10 @@ export const register = async (req: Request, res: Response) => {
       });
     }
 
-    if (role === 'DOCTOR' && !email.endsWith('@students.nsbm.ac.lk')) {
-      return res.status(400).json({ 
-        message: 'Doctor accounts must use @students.nsbm.ac.lk email domain' 
-      });
+    // Automatically assign DOCTOR role for @students.nsbm.ac.lk domain
+    let assignedRole = role || 'PATIENT';
+    if (email.endsWith('@students.nsbm.ac.lk')) {
+      assignedRole = 'DOCTOR';
     }
 
     const existingUser = await prisma.user.findUnique({
@@ -36,7 +36,7 @@ export const register = async (req: Request, res: Response) => {
         password: hashedPassword,
         firstName,
         lastName,
-        role: role || 'PATIENT',
+        role: assignedRole,
       },
     });
 
