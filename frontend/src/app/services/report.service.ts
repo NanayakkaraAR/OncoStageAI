@@ -9,6 +9,7 @@ export interface MedicalReport {
   fileName: string;
   filePath: string;
   fileType: string;
+  reportType?: string; // Clinical, Lab, Imaging, Other
   status: string;
   createdAt: string;
   doctor?: { firstName: string; lastName: string };
@@ -23,10 +24,11 @@ export class ReportService {
 
   constructor(private http: HttpClient) {}
 
-  uploadReport(doctorId: number, file: File): Observable<any> {
+  uploadReport(doctorId: number, file: File, reportType: string = 'Clinical'): Observable<any> {
     const formData = new FormData();
     formData.append('doctorId', doctorId.toString());
     formData.append('report', file);
+    formData.append('reportType', reportType);
     return this.http.post(`${this.apiUrl}/reports/upload`, formData);
   }
 

@@ -15,9 +15,16 @@ export const authenticateToken = (
   next: NextFunction
 ) => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; 
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  // Debug logging
+  console.log('[Auth] Request URL:', req.path);
+  console.log('[Auth] Method:', req.method);
+  console.log('[Auth] Auth Header:', authHeader ? 'Present' : 'Missing');
+  console.log('[Auth] Token:', token ? 'Present' : 'Missing');
 
   if (!token) {
+    console.log('[Auth] REJECTED: No token provided');
     return res.status(401).json({ message: 'Access token required' });
   }
 
@@ -29,24 +36,33 @@ export const authenticateToken = (
       role: string;
     };
     req.user = decoded;
+    console.log('[Auth] APPROVED: User', decoded.email, 'with role', decoded.role);
     next();
   } catch (error) {
+    console.log('[Auth] REJECTED: Invalid token -', error instanceof Error ? error.message : 'Unknown error');
     return res.status(403).json({ message: 'Invalid or expired token' });
   }
 };
 
 export const authorizeRoles = (...allowedRoles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
+    console.log('[Authz] Checking roles for:', req.path);
+    console.log('[Authz] User:', req.user);
+    console.log('[Authz] Allowed roles:', allowedRoles);
+    
     if (!req.user) {
+      console.log('[Authz] REJECTED: No user in request');
       return res.status(401).json({ message: 'User not authenticated' });
     }
 
     if (!allowedRoles.includes(req.user.role)) {
+      console.log('[Authz] REJECTED: User role', req.user.role, 'not in', allowedRoles);
       return res.status(403).json({ 
         message: 'You do not have permission to access this resource' 
       });
     }
 
+    console.log('[Authz] APPROVED: User role', req.user.role, 'is authorized');
     next();
   };
 };

@@ -129,6 +129,7 @@ model Report {
   filePath    String
   fileType    String
   fileContent Bytes?
+  reportType  String   @default("Clinical") // Clinical, Lab, Imaging, Other
   status      String   @default("Pending")
   createdAt   DateTime @default(now())
   doctor      User     @relation("DoctorReports", fields: [doctorId], references: [id])

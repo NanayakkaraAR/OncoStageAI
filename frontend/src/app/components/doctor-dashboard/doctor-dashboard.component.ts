@@ -1696,10 +1696,36 @@ ${automatedSummary}`;
   }
 
   shouldShowField(key: string): boolean {
+    // Clinical Symptom fields - only show for clinical reports
+    const clinicalSymptomFields = [
+      'Symptom_Smoking', 'Yellow_Fingers', 'Anxiety', 'Peer_Pressure',
+      'Chronic_Disease', 'Fatigue', 'Allergy', 'Wheezing',
+      'Coughing', 'Shortness_Of_Breath', 'Swallowing_Difficulty', 'Chest_Pain'
+    ];
+
+    // Blood Chemistry fields - only show for clinical reports
+    const bloodChemistryFields = [
+      'Hemoglobin_Level', 'White_Blood_Cell_Count', 'Platelet_Count',
+      'Albumin_Level', 'LDH_Level', 'Calcium_Level', 'Creatinine_Level',
+      'Glucose_Level', 'Potassium_Level', 'Sodium_Level', 'Phosphorus_Level',
+      'Alkaline_Phosphatase_Level', 'Alanine_Aminotransferase_Level',
+      'Aspartate_Aminotransferase_Level'
+    ];
+
+    // If a clinical-specific field is requested, check if this is a clinical report
+    if (clinicalSymptomFields.includes(key) || bloodChemistryFields.includes(key)) {
+      const reportType = this.selectedReportForAssessment?.reportType || 'Clinical';
+      if (reportType !== 'Clinical') {
+        return false; // Hide these fields for non-clinical reports
+      }
+    }
+
+    // Smoking Pack Years is only shown if Smoking History is enabled
     if (key === 'Smoking_Pack_Years') {
       const history = this.assessmentForm.get('Smoking_History')?.value;
       return history == 1;
     }
+
     return true;
   }
 
@@ -1758,16 +1784,18 @@ ${automatedSummary}`;
     this.openAssessmentForm();
     
     this.reportService.parseReport(report.id).subscribe({
-      next: (res) => {
-        const extractedFields = res?.data;
+      next: (extractedFields) => {
+        // The service already maps to res.data, so we get the extracted fields directly
         if (extractedFields && typeof extractedFields === 'object') {
           // Only patch fields that are present in the form AND have a value in the response
+          // AND should be shown for this report type
           const formKeys = Object.keys(this.assessmentForm.controls);
           const patch: Record<string, any> = {};
           let filledCount = 0;
           
           formKeys.forEach(key => {
-            if (key in extractedFields && extractedFields[key] !== null && extractedFields[key] !== undefined) {
+            // Only patch if: field exists in extracted data, has a value, AND should be shown for this report type
+            if (key in extractedFields && extractedFields[key] !== null && extractedFields[key] !== undefined && this.shouldShowField(key)) {
               patch[key] = extractedFields[key];
               filledCount++;
             }

@@ -7,7 +7,7 @@ import fs from 'fs';
 export const uploadReport = async (req: AuthRequest, res: Response) => {
   try {
     const patientId = req.user!.id;
-    const { doctorId } = req.body;
+    const { doctorId, reportType = 'Clinical' } = req.body;
     const file = req.file;
 
     if (!doctorId) {
@@ -27,6 +27,7 @@ export const uploadReport = async (req: AuthRequest, res: Response) => {
         fileName: file.originalname,
         filePath: file.path,
         fileType: file.mimetype,
+        reportType: reportType, // Store the report type
         fileContent: fileBuffer,
       },
     });
@@ -109,7 +110,7 @@ export const parseReport = async (req: AuthRequest, res: Response) => {
     const mlServiceUrl = process.env.ML_SERVICE_URL_PARSE || 'http://127.0.0.1:8000/parse-report';
     const absolutePath = path.resolve(report.filePath);
     
-    console.log(`[ParseReport] ID: ${reportId}, Path: ${absolutePath}`);
+    console.log(`[ParseReport] ID: ${reportId}, Path: ${absolutePath}, Type: ${report.reportType}`);
 
     // Use a promise-based wrapper for http.request for better compatibility
     const mlData = await new Promise((resolve, reject) => {
@@ -152,8 +153,11 @@ export const parseReport = async (req: AuthRequest, res: Response) => {
       req.end();
     }) as any;
 
-    console.log(`[ParseReport] Success, extracted ${Object.keys(mlData.data || {}).length} fields`);
-    res.json({ success: true, data: mlData });
+    // Filter extracted fields based on report type
+    const filteredData = filterExtractedFields(mlData.data || {}, report.reportType);
+
+    console.log(`[ParseReport] Success, extracted ${Object.keys(mlData.data || {}).length} fields, filtered to ${Object.keys(filteredData).length} for report type: ${report.reportType}`);
+    res.json({ success: true, data: filteredData });
   } catch (error) {
     console.error('[ParseReport] Controller Error:', error);
     res.status(500).json({ 
@@ -161,6 +165,40 @@ export const parseReport = async (req: AuthRequest, res: Response) => {
       error: error instanceof Error ? error.message : 'Failed to parse report' 
     });
   }
+};
+
+// Helper function to filter extracted fields based on report type
+const filterExtractedFields = (data: Record<string, any>, reportType: string): Record<string, any> => {
+  // Clinical-specific fields that should only be included for Clinical reports
+  const clinicalSymptomFields = [
+    'Symptom_Smoking', 'Yellow_Fingers', 'Anxiety', 'Peer_Pressure',
+    'Chronic_Disease', 'Fatigue', 'Allergy', 'Wheezing',
+    'Coughing', 'Shortness_Of_Breath', 'Swallowing_Difficulty', 'Chest_Pain'
+  ];
+
+  const bloodChemistryFields = [
+    'Hemoglobin_Level', 'White_Blood_Cell_Count', 'Platelet_Count',
+    'Albumin_Level', 'LDH_Level', 'Calcium_Level', 'Creatinine_Level',
+    'Glucose_Level', 'Potassium_Level', 'Sodium_Level', 'Phosphorus_Level',
+    'Alkaline_Phosphatase_Level', 'Alanine_Aminotransferase_Level',
+    'Aspartate_Aminotransferase_Level'
+  ];
+
+  const clinicalOnlyFields = [...clinicalSymptomFields, ...bloodChemistryFields];
+
+  // If it's not a Clinical report, exclude clinical-specific fields
+  if (reportType !== 'Clinical') {
+    const filtered: Record<string, any> = {};
+    Object.keys(data).forEach(key => {
+      if (!clinicalOnlyFields.includes(key)) {
+        filtered[key] = data[key];
+      }
+    });
+    return filtered;
+  }
+
+  // For Clinical reports, return all fields
+  return data;
 };
 
 export const getReportFile = async (req: AuthRequest, res: Response) => {

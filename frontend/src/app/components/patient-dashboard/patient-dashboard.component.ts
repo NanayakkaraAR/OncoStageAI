@@ -1651,6 +1651,7 @@ export class PatientDashboardComponent implements OnInit {
   patientReports: MedicalReport[] = [];
   selectedFile: File | null = null;
   uploadingReport = false;
+  selectedReportType: string = 'Clinical'; // Default to Clinical report type
 
   isCallActive = false;
   jitsiApi: any;
@@ -1852,10 +1853,11 @@ export class PatientDashboardComponent implements OnInit {
     if (!this.selectedFile || !this.selectedDoctor) return;
 
     this.uploadingReport = true;
-    this.reportService.uploadReport(this.selectedDoctor.id, this.selectedFile).subscribe({
+    this.reportService.uploadReport(this.selectedDoctor.id, this.selectedFile, this.selectedReportType).subscribe({
       next: (res) => {
         this.uploadingReport = false;
         this.selectedFile = null;
+        this.selectedReportType = 'Clinical'; // Reset to default
         this.loadPatientReports();
         alert('Report shared successfully with Dr. ' + (this.selectedDoctor?.lastName || ''));
       },
