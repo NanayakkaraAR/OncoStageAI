@@ -11,7 +11,7 @@
         <span class="logo-text">OncoStageAI</span>
       </div>
       <button class="btn-signin" (click)="onNavigate('login')">
-        Sign In
+        {{ 'landing.signIn' | translate }}
       </button>
     </div>
   </header>
@@ -25,16 +25,15 @@
             <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"></path>
             <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"></path>
           </svg>
-          <span>AI-Powered Prediction</span>
+          <span>{{ 'landing.badge' | translate }}</span>
         </div>
         
         <h1 class="hero-title">
-          AI-Based Lung Cancer Stage Prediction Web Application
+          {{ 'landing.title' | translate }}
         </h1>
         
         <p class="hero-description">
-          Early-stage lung cancer detection powered by advanced artificial intelligence. 
-          Analyze clinical data to predict cancer stages and enable timely medical intervention.
+          {{ 'landing.description' | translate }}
         </p>
 
         <div class="cta-buttons">
@@ -42,14 +41,14 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5c0 1.1.9 2 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"></path>
             </svg>
-            Login as Patient
+            {{ 'landing.loginPatient' | translate }}
           </button>
           
           <button class="btn-secondary" (click)="onNavigate('login')">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
-            Login as Doctor
+            {{ 'landing.loginDoctor' | translate }}
           </button>
         </div>
 
@@ -63,7 +62,7 @@
             </div>
             <div class="indicator-text">
               <div class="indicator-value">98%</div>
-              <div class="indicator-label">Accuracy</div>
+              <div class="indicator-label">{{ 'landing.accuracy' | translate }}</div>
             </div>
           </div>
           <div class="indicator">
@@ -75,7 +74,7 @@
             </div>
             <div class="indicator-text">
               <div class="indicator-value">10K+</div>
-              <div class="indicator-label">Predictions</div>
+              <div class="indicator-label">{{ 'landing.predictions' | translate }}</div>
             </div>
           </div>
         </div>
@@ -100,8 +99,8 @@
             <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"></path>
           </svg>
         </div>
-        <h3 class="feature-title">AI-Powered Analysis</h3>
-        <p class="feature-description">Advanced machine learning algorithms analyze clinical data for accurate predictions</p>
+        <h3 class="feature-title">{{ 'landing.aiAnalysis' | translate }}</h3>
+        <p class="feature-description">{{ 'landing.aiAnalysisDesc' | translate }}</p>
       </div>
 
       <div class="feature-card">
@@ -110,8 +109,8 @@
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
           </svg>
         </div>
-        <h3 class="feature-title">Early Detection</h3>
-        <p class="feature-description">Identify lung cancer stages early to enable timely medical intervention</p>
+        <h3 class="feature-title">{{ 'landing.earlyDetection' | translate }}</h3>
+        <p class="feature-description">{{ 'landing.earlyDetectionDesc' | translate }}</p>
       </div>
 
       <div class="feature-card">
@@ -120,8 +119,8 @@
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
           </svg>
         </div>
-        <h3 class="feature-title">Secure & Private</h3>
-        <p class="feature-description">HIPAA-compliant data handling ensures your medical information stays protected</p>
+        <h3 class="feature-title">{{ 'landing.securePrivate' | translate }}</h3>
+        <p class="feature-description">{{ 'landing.securePrivateDesc' | translate }}</p>
       </div>
 
       <div class="feature-card">
@@ -130,8 +129,8 @@
             <path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5c0 1.1.9 2 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"></path>
           </svg>
         </div>
-        <h3 class="feature-title">Doctor Collaboration</h3>
-        <p class="feature-description">Share predictions with healthcare providers for comprehensive care</p>
+        <h3 class="feature-title">{{ 'landing.doctorCollaboration' | translate }}</h3>
+        <p class="feature-description">{{ 'landing.doctorCollaborationDesc' | translate }}</p>
       </div>
     </div>
 
@@ -139,9 +138,9 @@
     <section class="reviews-section" *ngIf="reviews.length > 0">
       <div class="section-container">
         <div class="section-header">
-          <div class="section-badge">Testimonials</div>
-          <h2 class="section-title">What Our Patients Say</h2>
-          <p class="section-subtitle">Real feedback from patients who have embarked on their care journey with us.</p>
+          <div class="section-badge">{{ 'landing.testimonials' | translate }}</div>
+          <h2 class="section-title">{{ 'landing.whatOurPatientsSay' | translate }}</h2>
+          <p class="section-subtitle">{{ 'landing.realFeedback' | translate }}</p>
         </div>
         
         <div class="reviews-container">
@@ -162,7 +161,7 @@
                   <div class="author-avatar">{{review.patient.firstName[0]}}{{review.patient.lastName[0]}}</div>
                   <div class="author-info">
                     <h4 class="author-name">{{review.patient.firstName}} {{review.patient.lastName}}</h4>
-                    <p class="author-meta">Consulted with Dr. {{review.doctor.lastName}}</p>
+                    <p class="author-meta">{{ 'landing.consultedWith' | translate:{ doctorName: review.doctor.lastName } }}</p>
                   </div>
                 </div>
                 <div class="review-rating">
@@ -189,12 +188,12 @@
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
             </svg>
           </div>
-          <span class="footer-text">© 2025 OncoStageAI. All rights reserved.</span>
+          <span class="footer-text">{{ 'landing.allRightsReserved' | translate }}</span>
         </div>
         <div class="footer-links">
-          <a href="#" class="footer-link">Privacy Policy</a>
-          <a href="#" class="footer-link">Terms of Service</a>
-          <a href="#" class="footer-link">Contact</a>
+          <a href="#" class="footer-link">{{ 'landing.privacyPolicy' | translate }}</a>
+          <a href="#" class="footer-link">{{ 'landing.termsOfService' | translate }}</a>
+          <a href="#" class="footer-link">{{ 'landing.contact' | translate }}</a>
         </div>
       </div>
     </div>

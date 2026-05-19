@@ -4,26 +4,31 @@
     <div class="header-inner">
       <div class="brand">
         <span class="brand-logo">🫁</span>
-        <span class="brand-name">LungCare AI</span>
+        <span class="brand-name">{{ 'dashboard.brand' | translate }}</span>
       </div>
       <nav class="main-nav">
         <a routerLink="/patient/dashboard" class="nav-item active">
-          <span class="nav-icon">⊞</span> Dashboard
+          <span class="nav-icon">⊞</span> {{ 'common.dashboard' | translate }}
         </a>
         <a href="#" class="nav-item">
-          <span class="nav-icon">📄</span> My Reports
+          <span class="nav-icon">📄</span> {{ 'dashboard.myReports' | translate }}
         </a>
         <a href="#" class="nav-item">
-          <span class="nav-icon">⚙</span> Settings
+          <span class="nav-icon">⚙</span> {{ 'common.settings' | translate }}
         </a>
       </nav>
       <div class="header-right">
+        <div class="language-selector" style="margin-right: 20px;">
+          <select (change)="onLanguageChange($event)" [value]="currentLanguage">
+            <option *ngFor="let lang of availableLanguages" [value]="lang.code">{{ lang.name }}</option>
+          </select>
+        </div>
         <div class="user-info">
           <span class="user-name">{{ currentUser?.firstName }} {{ currentUser?.lastName }}</span>
-          <span class="user-role">Patient</span>
+          <span class="user-role">{{ 'dashboard.userRole' | translate }}</span>
         </div>
         <button class="btn-logout" (click)="logout()">
-          <span>⮑</span> Logout
+          <span>⮑</span> {{ 'common.logout' | translate }}
         </button>
       </div>
     </div>
@@ -32,8 +37,8 @@
   <main class="content">
     <!-- Welcome Section -->
     <section class="welcome-section">
-      <h1>Welcome back, {{ currentUser?.firstName }} {{ currentUser?.lastName }}!</h1>
-      <p>Monitor your lung health with AI-powered predictions</p>
+      <h1>{{ 'dashboard.welcomeBack' | translate:{ firstName: currentUser?.firstName, lastName: currentUser?.lastName } }}</h1>
+      <p>{{ 'dashboard.monitorHealth' | translate }}</p>
     </section>
 
     <!-- Stats Grid -->
@@ -44,7 +49,7 @@
           <span class="trend-up">↗</span>
         </div>
         <div class="stat-value">{{ stats.totalPredictions }}</div>
-        <div class="stat-label">Total Predictions</div>
+        <div class="stat-label">{{ 'dashboard.totalPredictions' | translate }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-header">
@@ -52,7 +57,7 @@
           <span class="trend-up">↗</span>
         </div>
         <div class="stat-value">{{ stats.pendingReviews }}</div>
-        <div class="stat-label">Pending Reviews</div>
+        <div class="stat-label">{{ 'dashboard.pendingReviews' | translate }}</div>
       </div>
       <div class="stat-card">
         <div class="stat-header">
@@ -60,14 +65,14 @@
           <span class="trend-up">↗</span>
         </div>
         <div class="stat-value">{{ stats.completed }}</div>
-        <div class="stat-label">Completed</div>
+        <div class="stat-label">{{ 'dashboard.completed' | translate }}</div>
       </div>
     </div>
 
     <!-- Action Button -->
     <div class="action-bar">
       <button class="btn-primary" (click)="navigateToAssessment()">
-        <span class="btn-icon">⚡</span> Enter Health Data for Prediction
+        <span class="btn-icon">⚡</span> {{ 'dashboard.enterHealthData' | translate }}
       </button>
     </div>
 
@@ -77,24 +82,24 @@
         <!-- Latest Prediction -->
         <div class="card latest-prediction">
           <div class="card-header">
-            <h3>Latest Prediction Result</h3>
+            <h3>{{ 'dashboard.latestPredictionResult' | translate }}</h3>
             <span class="date-icon">📅</span>
           </div>
           <div class="result-details">
             <div class="detail-row">
-              <span class="label">Date</span>
+              <span class="label">{{ 'dashboard.date' | translate }}</span>
               <span class="value">{{ latestResult.date }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Risk Level</span>
-              <span class="badge" [class]="latestResult.riskLevel.toLowerCase()">{{ latestResult.riskLevel }}</span>
+              <span class="label">{{ 'dashboard.riskLevel' | translate }}</span>
+              <span class="badge" [class]="latestResult.riskLevel.toLowerCase()">{{ 'risks.' + latestResult.riskLevel.toLowerCase() | translate }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Predicted Stage</span>
+              <span class="label">{{ 'dashboard.predictedStage' | translate }}</span>
               <span class="value strong">{{ latestResult.predictedStage }}</span>
             </div>
             <div class="detail-row">
-              <span class="label">Confidence</span>
+              <span class="label">{{ 'dashboard.confidence' | translate }}</span>
               <div class="confidence-wrapper">
                 <div class="progress-bar">
                   <div class="progress" [style.width.%]="latestResult.confidence"></div>
@@ -108,19 +113,19 @@
           <div class="doctor-comments">
             <div class="comment-header">
               <span class="comment-icon">🩺</span>
-              <h4>Doctor's Comments</h4>
+              <h4>{{ 'dashboard.doctorComments' | translate }}</h4>
             </div>
             <p class="comment-text">{{ latestResult.doctorComment }}</p>
           </div>
 
-          <button class="btn-outline full-width">View Detailed Report</button>
+          <button class="btn-outline full-width">{{ 'dashboard.viewDetailedReport' | translate }}</button>
         </div>
 
         <!-- Recent History -->
         <div class="card history-card">
           <div class="card-header">
-            <h3>Recent Prediction History</h3>
-            <a href="#" class="view-all">View All</a>
+            <h3>{{ 'dashboard.recentPredictionHistory' | translate }}</h3>
+            <a href="#" class="view-all">{{ 'dashboard.viewAll' | translate }}</a>
           </div>
           <div class="history-list">
             <div class="history-item" *ngFor="let item of recentHistory">
@@ -131,7 +136,7 @@
                   <div class="history-stage">{{ item.stage }}</div>
                 </div>
               </div>
-              <span class="badge" [class]="item.risk.toLowerCase()">{{ item.risk }}</span>
+              <span class="badge" [class]="item.risk.toLowerCase()">{{ 'risks.' + item.risk.toLowerCase() | translate }}</span>
             </div>
           </div>
         </div>
@@ -142,25 +147,25 @@
         <div class="card notifications-card">
           <div class="card-header">
             <h3>
-              <span class="header-icon">🔔</span> Notifications
+              <span class="header-icon">🔔</span> {{ 'dashboard.notifications' | translate }}
             </h3>
             <span class="notif-count">2</span>
           </div>
           <div class="notifications-list">
             <div class="notification-item">
-              <p>Dr. Sarah Smith reviewed your latest prediction</p>
-              <span class="time-ago">2 hours ago</span>
+              <p>{{ 'dashboard.reviewedYourPrediction' | translate }}</p>
+              <span class="time-ago">{{ 'dashboard.hoursAgo' | translate:{ hours: '2' } }}</span>
             </div>
             <div class="notification-item highlight">
-              <p>Time for your next health check-up</p>
-              <span class="time-ago">1 day ago</span>
+              <p>{{ 'dashboard.timeForCheckup' | translate }}</p>
+              <span class="time-ago">{{ 'dashboard.daysAgo' | translate:{ days: '1' } }}</span>
             </div>
             <div class="notification-item">
-              <p>New AI model update improving accuracy</p>
-              <span class="time-ago">3 days ago</span>
+              <p>{{ 'dashboard.newAIModelUpdate' | translate }}</p>
+              <span class="time-ago">{{ 'dashboard.daysAgo' | translate:{ days: '3' } }}</span>
             </div>
           </div>
-          <button class="view-all-notif">View All Notifications</button>
+          <button class="view-all-notif">{{ 'dashboard.viewAllNotifications' | translate }}</button>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,6 +10,7 @@ import { ChatService, ChatMessage } from '../../services/chat.service';
 import { ReportService, MedicalReport } from '../../services/report.service';
 import { PdfService } from '../../services/pdf.service';
 import { ReviewService } from '../../services/review.service';
+import { TranslationService, Language } from '../../services/translation.service';
 
 
 declare var JitsiMeetExternalAPI: any;
@@ -21,12 +22,14 @@ interface FieldGroup {
 }
 
 type DashView = 'home' | 'upload-reports' | 'reports' | 'settings' | 'report-detail' | 'consult';
-type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
+type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy' | 'languages';
+
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-patient-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, TranslatePipe],
   template: `
     <div class="page-wrapper">
       <!-- ═══════════════ REVIEW MODAL ═══════════════ -->
@@ -77,24 +80,24 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
           <nav class="header-nav">
             <button class="nav-btn" [class.active]="view==='home'" (click)="view='home'">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-              Dashboard
+              {{ 'common.dashboard' | translate }}
             </button>
             <button class="nav-btn" [class.active]="view==='reports'" (click)="view='reports'">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-              My Predictions
+              {{ 'common.predictions' | translate }}
             </button>
             <button class="nav-btn" [class.active]="view==='upload-reports'" (click)="view='upload-reports'">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              Share Reports
+              {{ 'common.reports' | translate }}
             </button>
             <button class="nav-btn" [class.active]="view==='consult'" (click)="openConsult()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-              Consult
+              {{ 'common.consult' | translate }}
               <span *ngIf="getTotalUnreadCount() > 0" class="nav-unread-badge">{{ getTotalUnreadCount() }}</span>
             </button>
             <button class="nav-btn" [class.active]="view==='settings'" (click)="openSettings()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-              Settings
+              {{ 'common.settings' | translate }}
             </button>
           </nav>
           <div class="header-right">
@@ -104,7 +107,7 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
             </span>
             <button class="btn-logout" (click)="logout()">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-              Logout
+              {{ 'common.logout' | translate }}
             </button>
           </div>
         </div>
@@ -747,8 +750,8 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
       <main *ngIf="view==='settings'" class="dash-main settings-main">
         <div class="welcome-section">
           <div>
-            <h1 class="welcome-title">Settings</h1>
-            <p class="welcome-sub">Manage your account preferences and security</p>
+            <h1 class="welcome-title">{{ 'settings.settingsTitle' | translate }}</h1>
+            <p class="welcome-sub">{{ 'settings.manageAccount' | translate }}</p>
           </div>
         </div>
 
@@ -756,16 +759,19 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
           <!-- Sidebar -->
           <div class="settings-sidebar">
              <button class="settings-tab" [class.active]="settingsTab==='profile'" (click)="settingsTab='profile'">
-               <span class="st-icon">👤</span> Profile
+               <span class="st-icon">👤</span> {{ 'settings.profile' | translate }}
              </button>
              <button class="settings-tab" [class.active]="settingsTab==='security'" (click)="settingsTab='security'">
-               <span class="st-icon">🔒</span> Security
+               <span class="st-icon">🔒</span> {{ 'settings.security' | translate }}
              </button>
              <button class="settings-tab" [class.active]="settingsTab==='notifications'" (click)="settingsTab='notifications'">
-               <span class="st-icon">🔔</span> Notifications
+               <span class="st-icon">🔔</span> {{ 'settings.notifications' | translate }}
+             </button>
+             <button class="settings-tab" [class.active]="settingsTab==='languages'" (click)="settingsTab='languages'">
+               <span class="st-icon">🌐</span> {{ 'settings.languages' | translate }}
              </button>
              <button class="settings-tab" [class.active]="settingsTab==='privacy'" (click)="settingsTab='privacy'">
-               <span class="st-icon">🛡️</span> Privacy
+               <span class="st-icon">🛡️</span> {{ 'settings.privacy' | translate }}
              </button>
           </div>
 
@@ -774,45 +780,45 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
             
             <!-- PROFILE -->
             <div *ngIf="settingsTab==='profile'" class="settings-card">
-              <h3 class="setting-card-title">Profile Settings</h3>
+              <h3 class="setting-card-title">{{ 'settings.profileSettings' | translate }}</h3>
               <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()">
                 <div class="settings-grid">
                   <div class="form-field">
-                    <label>First Name</label>
+                    <label>{{ 'settings.firstName' | translate }}</label>
                     <div class="input-with-icon">
                       <span class="input-icon">👤</span>
                       <input formControlName="firstName" type="text" />
                     </div>
                   </div>
                   <div class="form-field">
-                    <label>Last Name</label>
+                    <label>{{ 'settings.lastName' | translate }}</label>
                     <div class="input-with-icon">
                       <span class="input-icon">👤</span>
                       <input formControlName="lastName" type="text" />
                     </div>
                   </div>
                   <div class="form-field">
-                    <label>Email Address</label>
+                    <label>{{ 'settings.email' | translate }}</label>
                     <div class="input-with-icon">
                       <span class="input-icon">✉️</span>
                       <input formControlName="email" type="email" />
                     </div>
                   </div>
                   <div class="form-field">
-                    <label>Phone Number</label>
+                    <label>{{ 'settings.phoneNumber' | translate }}</label>
                     <div class="input-with-icon">
                       <span class="input-icon">📞</span>
                       <input formControlName="phoneNumber" type="text" placeholder="+1 (555) 123-4567" />
                     </div>
                   </div>
                   <div class="form-field grid-col-span-2">
-                    <label>Address</label>
+                    <label>{{ 'settings.address' | translate }}</label>
                     <input formControlName="address" type="text" placeholder="123 Main Street, City, State 12345" />
                   </div>
                 </div>
                 <!-- success/error msgs here -->
                 <div class="form-actions-right">
-                  <button type="submit" class="btn-save" [disabled]="profileForm.invalid || savingProfile">Save Changes</button>
+                  <button type="submit" class="btn-save" [disabled]="profileForm.invalid || savingProfile">{{ 'settings.saveChanges' | translate }}</button>
                 </div>
               </form>
             </div>
@@ -920,6 +926,31 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
                   <button type="submit" class="btn-save" [disabled]="savingNotifications">Save Preferences</button>
                 </div>
               </form>
+            </div>
+
+            <!-- LANGUAGES -->
+            <div *ngIf="settingsTab==='languages'" class="settings-card">
+              <h3 class="setting-card-title">{{ 'settings.languageSettings' | translate }}</h3>
+              <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 24px;">{{ 'settings.selectLanguage' | translate }}</p>
+              
+              <div class="language-grid">
+                <button *ngFor="let lang of availableLanguages" 
+                        class="language-option" 
+                        [class.active]="currentLanguage === lang.code"
+                        (click)="changeLanguage(lang.code)">
+                  <div class="lang-radio" [class.selected]="currentLanguage === lang.code"></div>
+                  <div class="lang-info">
+                    <span class="lang-name">{{ lang.name }}</span>
+                    <span class="lang-code">({{ lang.code | uppercase }})</span>
+                  </div>
+                  <span *ngIf="currentLanguage === lang.code" class="lang-check">✓</span>
+                </button>
+              </div>
+
+              <div class="language-note">
+                <span class="note-icon">ℹ️</span>
+                <p>Your language preference will be saved and applied automatically on your next visit.</p>
+              </div>
             </div>
 
             <!-- PRIVACY -->
@@ -1441,6 +1472,33 @@ type SettingsTab = 'profile' | 'security' | 'notifications' | 'privacy';
     input:checked + .slider { background-color: #0d9488; }
     input:checked + .slider:before { transform: translateX(20px); }
 
+    /* LANGUAGE SETTINGS */
+    .language-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 24px; }
+    .language-option {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 20px; border: 2px solid #e2e8f0; border-radius: 12px;
+      background: #fff; cursor: pointer; transition: all 0.2s;
+      font-size: 0.95rem; text-align: left; width: 100%;
+    }
+    .language-option:hover { border-color: #14b8a6; background: #f0fdfa; }
+    .language-option.active { border-color: #14b8a6; background: #e6faf8; }
+    .lang-radio {
+      width: 20px; height: 20px; border: 2px solid #cbd5e1; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .lang-radio.selected { border-color: #14b8a6; background: #14b8a6; box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
+    .lang-info { flex: 1; }
+    .lang-name { display: block; font-weight: 600; color: #1e293b; }
+    .lang-code { display: block; font-size: 0.8rem; color: #94a3b8; margin-top: 2px; }
+    .lang-check { color: #14b8a6; font-weight: 700; font-size: 1.2rem; }
+    .language-note {
+      display: flex; gap: 12px; padding: 16px; background: #f0f9ff; border: 1px solid #bae6fd;
+      border-radius: 10px; align-items: flex-start;
+    }
+    .note-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .language-note p { font-size: 0.85rem; color: #0369a1; margin: 0; line-height: 1.5; }
+
     .privacy-alert {
       display: flex; gap: 16px; background: #eff6ff; border: 1px solid #bfdbfe;
       border-radius: 12px; padding: 20px; margin-bottom: 32px; align-items: flex-start;
@@ -1666,6 +1724,10 @@ export class PatientDashboardComponent implements OnInit {
   changingPassword = false;
   savingNotifications = false;
 
+  // Language settings
+  currentLanguage: Language = 'en';
+  availableLanguages: Array<{ code: Language; name: string }> = [];
+
   get latestPrediction(): PatientOwnPrediction | null {
     return this.predictions.length > 0 ? this.predictions[0] : null;
   }
@@ -1787,7 +1849,9 @@ export class PatientDashboardComponent implements OnInit {
     private reportService: ReportService,
     private router: Router,
     private pdfService: PdfService,
-    private reviewService: ReviewService
+    private reviewService: ReviewService,
+    private translationService: TranslationService,
+    private cdr: ChangeDetectorRef
   ) {
     this.currentUser = this.authService.getCurrentUser();
     const nav = this.router.getCurrentNavigation();
@@ -1798,6 +1862,10 @@ export class PatientDashboardComponent implements OnInit {
       rating: [5, [Validators.required, Validators.min(1), Validators.max(5)]],
       comment: ['', Validators.required]
     });
+
+    // Initialize language settings
+    this.currentLanguage = this.translationService.getLanguage();
+    this.availableLanguages = this.translationService.getAvailableLanguages();
   }
 
   ngOnInit(): void {
@@ -1811,6 +1879,11 @@ export class PatientDashboardComponent implements OnInit {
     if (!this.selectedDoctor) {
       this.loadDoctor();
     }
+
+    // Subscribe to language changes and trigger re-render
+    this.translationService.currentLanguage$.subscribe(() => {
+      this.cdr.markForCheck();
+    });
 
     // Refresh doctor info periodically for unread counts
     setInterval(() => {
@@ -2092,6 +2165,11 @@ export class PatientDashboardComponent implements OnInit {
       }
     }
     return this.fb.group(controls);
+  }
+
+  changeLanguage(language: Language): void {
+    this.translationService.setLanguage(language);
+    this.currentLanguage = language;
   }
 
 
