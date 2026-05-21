@@ -10,8 +10,8 @@ import { uploadReport, getPatientReports, getDoctorReports, getAllDoctorReports,
 import { getAIResponse } from '../controllers/ai-chat.controller';
 import { submitReview } from '../controllers/review.controller';
 import { textToSpeech } from '../controllers/tts.controller';
-
-
+import { getPatients, getDoctors as getAdminDoctors, getComplaints } from '../controllers/admin.controller';
+import { submitComplaint } from '../controllers/complaint.controller';
 
 const router = Router();
 
@@ -163,6 +163,14 @@ router.get('/doctor-admin/users',
 router.post('/ai-chat', authenticateToken, getAIResponse);
 router.post('/ai-chat/tts', authenticateToken, textToSpeech);
 router.post('/reviews', authenticateToken, authorizeRoles('PATIENT'), submitReview);
+
+// Admin Routes
+router.get('/admin/patients', authenticateToken, authorizeRoles('ADMIN'), getPatients);
+router.get('/admin/doctors', authenticateToken, authorizeRoles('ADMIN'), getAdminDoctors);
+router.get('/admin/complaints', authenticateToken, authorizeRoles('ADMIN'), getComplaints);
+
+// Patient Complaints
+router.post('/patient/complaints', authenticateToken, authorizeRoles('PATIENT'), submitComplaint);
 
 export default router;
 

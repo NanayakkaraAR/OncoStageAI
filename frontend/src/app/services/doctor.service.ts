@@ -22,4 +22,8 @@ export class DoctorService {
       .get<{ success: boolean; data: Doctor[] }>(`${this.apiUrl}/doctors`)
       .pipe(map(r => r.data));
   }
+
+  submitComplaint(doctorId: number, reason: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/patient/complaints`, { doctorId, reason });
+  }
 }

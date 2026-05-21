@@ -68,6 +68,30 @@ export const login = async (req: Request, res: Response) => {
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
     }
+
+    // Hardcoded Admin Login
+    if (email === 'admin@onco.com' && password === 'Admin123') {
+      const mockAdminUser = {
+        id: 0,
+        email: 'admin@onco.com',
+        firstName: 'System',
+        lastName: 'Admin',
+        role: 'ADMIN',
+        isActive: true,
+      };
+
+      const token = generateToken({
+        id: mockAdminUser.id,
+        email: mockAdminUser.email,
+        role: 'ADMIN',
+      });
+
+      return res.status(200).json({
+        message: 'Login successful',
+        user: mockAdminUser,
+        token,
+      });
+    }
     const user = await prisma.user.findUnique({
       where: { email },
     });
@@ -232,6 +256,22 @@ export const resetPassword = async (req: Request, res: Response) => {
 export const getProfile = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
+    const userRole = (req as any).user.role;
+
+    if (userId === 0 && userRole === 'ADMIN') {
+      return res.status(200).json({
+        user: {
+          id: 0,
+          email: 'admin@onco.com',
+          firstName: 'System',
+          lastName: 'Admin',
+          role: 'ADMIN',
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }
+      });
+    }
 
     const user = await prisma.user.findUnique({
       where: { id: userId },

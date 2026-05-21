@@ -37,6 +37,8 @@ model User {
   patientReports                                                         Report[]                     @relation("PatientReports")
   doctorReviews                                                          Review[]                     @relation("DoctorReviews")
   patientReviews                                                         Review[]                     @relation("PatientReviews")
+  doctorComplaints                                                       DoctorComplaint[]            @relation("DoctorComplaints")
+  patientComplaints                                                      DoctorComplaint[]            @relation("PatientComplaints")
 
   @@map("users")
 }
@@ -170,3 +172,15 @@ model Review {
   @@map("reviews")
 }
 
+model DoctorComplaint {
+  id         Int      @id @default(autoincrement())
+  patientId  Int
+  doctorId   Int
+  reason     String
+  status     String   @default("Pending")
+  createdAt  DateTime @default(now())
+  doctor     User     @relation("DoctorComplaints", fields: [doctorId], references: [id])
+  patient    User     @relation("PatientComplaints", fields: [patientId], references: [id])
+
+  @@map("doctor_complaints")
+}
