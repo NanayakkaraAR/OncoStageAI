@@ -213,7 +213,6 @@ export const submitPrediction = async (req: AuthRequest, res: Response) => {
         patientId,
         doctorId: Number(doctorId),
         result: mlResult.prediction,
-        status: req.user!.role === 'DOCTOR' ? 'Reviewed' : 'Pending Review',
         Age: Number(featureData.Age) || 0,
         Gender: Number(featureData.Gender) || 0,
         Country: Number(featureData.Country) || 0,
@@ -235,8 +234,8 @@ export const submitPrediction = async (req: AuthRequest, res: Response) => {
         Glucose_Level: Number(featureData.Glucose_Level) || 0,
         Cholesterol_Level: Number(featureData.Cholesterol_Level) || 0,
         Bilirubin_Level: Number(featureData.Bilirubin_Level) || 0,
-        Aspartate_Aminotransferase_Level: Number(featureData.Aspartate_Aminotransferase_Level ?? featureData.AST_Level ?? 0),
-        Alanine_Aminotransferase_Level: Number(featureData.Alanine_Aminotransferase_Level ?? featureData.ALT_Level ?? 0),
+        AST_Level: Number(featureData.AST_Level ?? featureData.Aspartate_Aminotransferase_Level ?? 0),
+        ALT_Level: Number(featureData.ALT_Level ?? featureData.Alanine_Aminotransferase_Level ?? 0),
         Sodium_Level: Number(featureData.Sodium_Level) || 0,
         Potassium_Level: Number(featureData.Potassium_Level) || 0,
         Chloride_Level: Number(featureData.Chloride_Level) || 0,
@@ -312,18 +311,22 @@ export const getDoctorPredictions = async (req: AuthRequest, res: Response) => {
 export const updatePredictionStatus = async (req: AuthRequest, res: Response) => {
   try {
     const predictionId = Number(req.params.id);
-    const { status } = req.body;
+  const { status, doctorComments, doctorRecommendation } = req.body;
 
-    if (!predictionId || !status) {
-      return res.status(400).json({ success: false, error: 'Prediction ID and status are required' });
+    if (!predictionId) {
+      return res.status(400).json({ success: false, error: 'Prediction ID is required' });
     }
 
-    const updated = await prisma.prediction.update({
+    const prediction = await prisma.prediction.update({
       where: { id: predictionId },
-      data: { status }
+      data: {
+        status: status ?? undefined,
+        doctorComments: doctorComments ?? undefined,
+        doctorRecommendation: doctorRecommendation ?? undefined,
+      },
     });
 
-    res.json({ success: true, data: updated });
+    res.json({ success: true, data: prediction });
   } catch (error) {
     console.error('Update prediction status error:', error);
     res.status(500).json({ success: false, error: 'Failed to update status' });

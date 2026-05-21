@@ -7,6 +7,7 @@ import { ChatService, ChatMessage } from '../../services/chat.service';
 import { ReportService, MedicalReport } from '../../services/report.service';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { PdfService } from '../../services/pdf.service';
+import { UserService } from '../../services/user.service';
 
 declare var JitsiMeetExternalAPI: any;
 
@@ -29,7 +30,7 @@ declare var JitsiMeetExternalAPI: any;
             <span class="brand-box">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             </span>
-            <span class="brand-name">OncoStage AI</span>
+            <span class="brand-name">OncoStageAI</span>
           </div>
           <nav class="center-nav">
             <button class="nav-btn" [class.active]="view === 'dashboard'" (click)="view = 'dashboard'">
@@ -41,7 +42,7 @@ declare var JitsiMeetExternalAPI: any;
               Consultations
               <span *ngIf="getTotalUnreadCount() > 0" class="nav-count-badge">{{ getTotalUnreadCount() }}</span>
             </button>
-            <button class="nav-btn text-muted">
+            <button class="nav-btn" [class.active]="view === 'settings'" (click)="openSettings()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
               Settings
             </button>
@@ -656,6 +657,111 @@ declare var JitsiMeetExternalAPI: any;
            </div>
         </div>
       </main>
+      
+      <!-- ════════════ SETTINGS VIEW ════════════ -->
+      <main *ngIf="view==='settings'" class="content settings-main">
+        <div class="welcome-section settings-hero">
+          <h1 class="welcome-title">Settings</h1>
+          <p class="welcome-sub">Manage your account preferences and security</p>
+        </div>
+
+        <div class="settings-layout">
+          <!-- Sidebar -->
+          <div class="settings-sidebar">
+             <button class="settings-tab" [class.active]="settingsTab==='profile'" (click)="settingsTab='profile'">
+               <span class="st-icon">👤</span> Profile
+             </button>
+             <button class="settings-tab" [class.active]="settingsTab==='security'" (click)="settingsTab='security'">
+               <span class="st-icon">🔒</span> Security
+             </button>
+          </div>
+
+          <!-- Content Panel -->
+          <div class="settings-content">
+            
+            <!-- PROFILE -->
+            <div *ngIf="settingsTab==='profile'" class="settings-card">
+              <h3 class="setting-card-title">Profile Settings</h3>
+              <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()">
+                <div class="settings-grid">
+                  <div class="form-field">
+                    <label>First Name</label>
+                    <div class="input-with-icon">
+                      <span class="input-icon">👤</span>
+                      <input formControlName="firstName" type="text" />
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label>Last Name</label>
+                    <div class="input-with-icon">
+                      <span class="input-icon">👤</span>
+                      <input formControlName="lastName" type="text" />
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label>Email Address</label>
+                    <div class="input-with-icon">
+                      <span class="input-icon">✉️</span>
+                      <input formControlName="email" type="email" />
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label>Phone Number</label>
+                    <div class="input-with-icon">
+                      <span class="input-icon">📞</span>
+                      <input formControlName="phoneNumber" type="text" placeholder="+1 (555) 123-4567" />
+                    </div>
+                  </div>
+                  <div class="form-field grid-col-span-2">
+                    <label>Address</label>
+                    <input formControlName="address" type="text" placeholder="123 Hospital Way, Medical District" />
+                  </div>
+                </div>
+                <div class="form-actions-right">
+                  <button type="submit" class="btn-save" [disabled]="profileForm.invalid || savingProfile">
+                    {{ savingProfile ? 'Saving...' : 'Save Changes' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- SECURITY -->
+            <div *ngIf="settingsTab==='security'" class="settings-card">
+              <h3 class="setting-card-title">Security Settings</h3>
+              <form [formGroup]="securityForm" (ngSubmit)="onChangePassword()">
+                <div class="form-field">
+                  <label>Current Password</label>
+                  <div class="input-with-icon">
+                    <span class="input-icon">🔒</span>
+                    <input formControlName="currentPassword" type="password" placeholder="Enter current password" />
+                  </div>
+                </div>
+                <div class="settings-grid">
+                  <div class="form-field">
+                    <label>New Password</label>
+                    <div class="input-with-icon">
+                      <span class="input-icon">🔑</span>
+                      <input formControlName="newPassword" type="password" placeholder="New password" />
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label>Confirm New Password</label>
+                    <div class="input-with-icon">
+                      <span class="input-icon">✅</span>
+                      <input formControlName="confirmPassword" type="password" placeholder="Confirm password" />
+                    </div>
+                  </div>
+                </div>
+                <div class="form-actions-right">
+                  <button type="submit" class="btn-save" [disabled]="securityForm.invalid || changingPassword">
+                    {{ changingPassword ? 'Updating...' : 'Update Password' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   `,
   styles: [`
@@ -692,8 +798,9 @@ declare var JitsiMeetExternalAPI: any;
     .content { max-width: 1400px; margin: 0 auto; padding: 32px; }
     .content.scrollable { height: calc(100vh - 72px); display: flex; flex-direction: column; overflow: hidden; }
     .welcome-section { margin-bottom: 32px; }
-    .welcome-section h1 { font-size: 1.8rem; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
-    .welcome-section p { font-size: 1rem; color: #475569; }
+    .welcome-title { font-size: 2.2rem !important; font-weight: 800 !important; color: #0f172a; margin-bottom: 8px; letter-spacing: -0.025em; }
+    .welcome-sub { font-size: 1.1rem !important; color: #64748b !important; font-weight: 500; }
+    .settings-hero { margin-bottom: 40px; }
 
     /* STATS ROW */
     .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 32px; }
@@ -874,6 +981,58 @@ declare var JitsiMeetExternalAPI: any;
     .pl-info { display: flex; flex-direction: column; }
     .unread-badge { background: #ef4444; color: #fff; font-size: 0.7rem; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px; line-height: 1; }
     .nav-count-badge { background: #ef4444; color: #fff; font-size: 0.7rem; font-weight: 700; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-left: 8px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3); }
+
+    /* SETTINGS STYLES */
+    .settings-main { padding-top: 20px; }
+    .settings-layout { display: grid; grid-template-columns: 280px 1fr; gap: 40px; align-items: start; }
+    .settings-sidebar { background: #fff; border-radius: 20px; border: 1px solid #e2e8f0; padding: 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+    .settings-tab { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-radius: 12px; border: none; background: transparent; color: #64748b; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-align: left; }
+    .settings-tab:hover { background: #f8fafc; color: #0f172a; }
+    .settings-tab.active { background: #f0f9ff; color: #2563eb; }
+    .st-icon { font-size: 1.2rem; }
+    
+    .settings-content { flex: 1; min-width: 0; }
+    .settings-card { background: #fff; border-radius: 24px; border: 1px solid #e2e8f0; padding: 40px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04); }
+    .setting-card-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-bottom: 32px; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; }
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .grid-col-span-2 { grid-column: span 2; }
+    
+    .form-field { display: flex; flex-direction: column; gap: 10px; }
+    .form-field label { font-size: 0.9rem; font-weight: 700; color: #475569; }
+    
+    .input-with-icon { position: relative; width: 100%; }
+    .input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 1.1rem; color: #94a3b8; pointer-events: none; z-index: 10; }
+    
+    .form-field input { 
+      width: 100%; 
+      padding: 14px 18px; 
+      border-radius: 12px; 
+      border: 1px solid #cbd5e1; 
+      outline: none; 
+      font-family: inherit; 
+      font-size: 1rem; 
+      color: #1e293b;
+      background: #fff;
+      transition: all 0.2s; 
+    }
+    .input-with-icon input { padding-left: 48px !important; }
+    .form-field input:focus { border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); background: #fff; }
+    
+    .form-actions-right { margin-top: 32px; padding-top: 24px; border-top: 1px solid #f1f5f9; }
+    .btn-save { 
+      background: #2563eb; 
+      color: #fff; 
+      border: none; 
+      padding: 14px 32px; 
+      border-radius: 10px; 
+      font-weight: 700; 
+      font-size: 1rem; 
+      cursor: pointer; 
+      transition: all 0.2s; 
+      box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+    }
+    .btn-save:hover:not(:disabled) { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 6px 12px rgba(37, 99, 235, 0.25); }
+    .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
   `]
 })
 export class DoctorDashboardComponent implements OnInit, OnDestroy {
@@ -882,11 +1041,19 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   
-  view: 'dashboard' | 'review' | 'consultations' | 'assessment' = 'dashboard';
+  view: 'dashboard' | 'review' | 'consultations' | 'assessment' | 'settings' = 'dashboard';
   reviewTab: 'overview' | 'consult' = 'overview';
+  settingsTab: 'profile' | 'security' = 'profile';
+  
+  profileForm!: FormGroup;
+  securityForm!: FormGroup;
+  savingProfile = false;
+  changingPassword = false;
+
   assessmentForm!: FormGroup;
   submittingAssessment = false;
   predictionResult: string | null = null;
+  allDoctorReports: MedicalReport[] = [];
   patientReports: MedicalReport[] = [];
   selectedReportForAssessment: MedicalReport | null = null;
 
@@ -994,6 +1161,7 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     private predictionService: PredictionService,
     private chatService: ChatService,
     private reportService: ReportService,
+    private userService: UserService,
     private fb: FormBuilder,
     private pdfService: PdfService
   ) {
@@ -1004,6 +1172,7 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     this.loadPredictions();
     this.loadPatients();
     this.loadAllReports();
+    this.initSettingsForms();
     // Refresh patient list periodically for unread counts
     setInterval(() => {
       this.loadPatients();
@@ -1011,10 +1180,86 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     }, 10000);
   }
 
+  initSettingsForms(): void {
+    this.profileForm = this.fb.group({
+      firstName: [this.currentUser?.firstName || '', Validators.required],
+      lastName: [this.currentUser?.lastName || '', Validators.required],
+      email: [this.currentUser?.email || '', [Validators.required, Validators.email]],
+      phoneNumber: [this.currentUser?.phoneNumber || ''],
+      address: [this.currentUser?.address || '']
+    });
+
+    this.securityForm = this.fb.group({
+      currentPassword: ['', Validators.required],
+      newPassword: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', Validators.required]
+    });
+  }
+
+  openSettings(): void {
+    this.view = 'settings';
+    this.loadUserSettings();
+  }
+
+  loadUserSettings(): void {
+    this.userService.getUserSettings().subscribe({
+      next: (res) => {
+        const s = res.settings;
+        if (s) {
+          this.profileForm.patchValue({
+            firstName: s.firstName,
+            lastName: s.lastName,
+            email: s.email,
+            phoneNumber: s.phoneNumber,
+            address: s.address
+          });
+        }
+      },
+      error: () => console.error('Failed to load settings')
+    });
+  }
+
+  onSaveProfile(): void {
+    if (this.profileForm.invalid) return;
+    this.savingProfile = true;
+    this.userService.updateProfile(this.profileForm.value).subscribe({
+      next: (res) => {
+        alert('Profile updated successfully!');
+        const updated = res.user;
+        this.currentUser = { ...this.currentUser, ...updated };
+        this.savingProfile = false;
+      },
+      error: (err) => {
+        alert(err.error?.message || 'Failed to update profile');
+        this.savingProfile = false;
+      }
+    });
+  }
+
+  onChangePassword(): void {
+    if (this.securityForm.invalid) return;
+    if (this.securityForm.value.newPassword !== this.securityForm.value.confirmPassword) {
+      alert('New passwords do not match!');
+      return;
+    }
+    this.changingPassword = true;
+    this.userService.changePassword(this.securityForm.value).subscribe({
+      next: () => {
+        alert('Password changed successfully!');
+        this.securityForm.reset();
+        this.changingPassword = false;
+      },
+      error: (err) => {
+        alert(err.error?.message || 'Failed to change password');
+        this.changingPassword = false;
+      }
+    });
+  }
+
   loadAllReports(): void {
     this.reportService.getAllDoctorReports().subscribe({
       next: (reports) => {
-        this.patientReports = reports;
+        this.allDoctorReports = reports;
       },
       error: (err) => console.error('Failed to load all reports', err)
     });
@@ -1108,11 +1353,11 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
   }
 
   getPendingReports(): MedicalReport[] {
-    return this.patientReports.filter(r => !r.status || r.status === 'Pending');
+    return this.allDoctorReports.filter(r => !r.status || r.status === 'Pending');
   }
 
   getReviewedReports(): MedicalReport[] {
-    return this.patientReports.filter(r => r.status === 'Reviewed');
+    return this.allDoctorReports.filter(r => r.status === 'Reviewed');
   }
 
   getGenderStr(id: number): string {
@@ -1302,12 +1547,14 @@ export class DoctorDashboardComponent implements OnInit, OnDestroy {
     if(!this.selectedPrediction || !this.selectedPatient) return;
     
     // 1. Update Prediction Status
-    this.predictionService.updatePredictionStatus(this.selectedPrediction.id, 'Completed').subscribe({
+    this.predictionService.updatePredictionStatus(this.selectedPrediction.id, 'Completed', this.doctorComments, this.doctorRecommendation).subscribe({
       next: () => {
         this.selectedPrediction.status = 'Completed';
+        this.selectedPrediction.doctorComments = this.doctorComments;
+        this.selectedPrediction.doctorRecommendation = this.doctorRecommendation;
         
         // 2. Update all pending reports for this patient to 'Reviewed'
-        const pendingReports = this.patientReports.filter(r => r.status === 'Pending');
+        const pendingReports = this.allDoctorReports.filter(r => r.patientId === this.selectedPatient.id && r.status === 'Pending');
         pendingReports.forEach(report => {
           this.reportService.updateReportStatus(report.id, 'Reviewed').subscribe({
             next: () => report.status = 'Reviewed'
@@ -1352,12 +1599,21 @@ ${automatedSummary}`;
     this.chatService.sendMessage(this.selectedPatient.id, fullMessage).subscribe({
       next: (msg) => {
         this.chatMessages.push(msg.data);
-        this.reviewTab = 'consult';
-        alert('Feedback successfully sent using your professional assessment.');
         
-        // Optional: clear comments after sending
-        this.doctorComments = '';
-        this.doctorRecommendation = '';
+        // Also update the prediction record with the feedback
+        this.predictionService.updatePredictionStatus(this.selectedPrediction.id, 'Reviewed', this.doctorComments, this.doctorRecommendation).subscribe({
+          next: () => {
+            this.selectedPrediction.status = 'Reviewed';
+            this.selectedPrediction.doctorComments = this.doctorComments;
+            this.selectedPrediction.doctorRecommendation = this.doctorRecommendation;
+            this.reviewTab = 'consult';
+            alert('Feedback successfully sent and saved to patient record.');
+            
+            // Optional: clear comments after sending
+            this.doctorComments = '';
+            this.doctorRecommendation = '';
+          }
+        });
       },
       error: (err) => {
         console.error('Failed to send feedback', err);
@@ -1440,10 +1696,36 @@ ${automatedSummary}`;
   }
 
   shouldShowField(key: string): boolean {
+    // Clinical Symptom fields - only show for clinical reports
+    const clinicalSymptomFields = [
+      'Symptom_Smoking', 'Yellow_Fingers', 'Anxiety', 'Peer_Pressure',
+      'Chronic_Disease', 'Fatigue', 'Allergy', 'Wheezing',
+      'Coughing', 'Shortness_Of_Breath', 'Swallowing_Difficulty', 'Chest_Pain'
+    ];
+
+    // Blood Chemistry fields - only show for clinical reports
+    const bloodChemistryFields = [
+      'Hemoglobin_Level', 'White_Blood_Cell_Count', 'Platelet_Count',
+      'Albumin_Level', 'LDH_Level', 'Calcium_Level', 'Creatinine_Level',
+      'Glucose_Level', 'Potassium_Level', 'Sodium_Level', 'Phosphorus_Level',
+      'Alkaline_Phosphatase_Level', 'Alanine_Aminotransferase_Level',
+      'Aspartate_Aminotransferase_Level'
+    ];
+
+    // If a clinical-specific field is requested, check if this is a clinical report
+    if (clinicalSymptomFields.includes(key) || bloodChemistryFields.includes(key)) {
+      const reportType = this.selectedReportForAssessment?.reportType || 'Clinical';
+      if (reportType !== 'Clinical') {
+        return false; // Hide these fields for non-clinical reports
+      }
+    }
+
+    // Smoking Pack Years is only shown if Smoking History is enabled
     if (key === 'Smoking_Pack_Years') {
       const history = this.assessmentForm.get('Smoking_History')?.value;
       return history == 1;
     }
+
     return true;
   }
 
@@ -1502,16 +1784,18 @@ ${automatedSummary}`;
     this.openAssessmentForm();
     
     this.reportService.parseReport(report.id).subscribe({
-      next: (res) => {
-        const extractedFields = res?.data;
+      next: (extractedFields) => {
+        // The service already maps to res.data, so we get the extracted fields directly
         if (extractedFields && typeof extractedFields === 'object') {
           // Only patch fields that are present in the form AND have a value in the response
+          // AND should be shown for this report type
           const formKeys = Object.keys(this.assessmentForm.controls);
           const patch: Record<string, any> = {};
           let filledCount = 0;
           
           formKeys.forEach(key => {
-            if (key in extractedFields && extractedFields[key] !== null && extractedFields[key] !== undefined) {
+            // Only patch if: field exists in extracted data, has a value, AND should be shown for this report type
+            if (key in extractedFields && extractedFields[key] !== null && extractedFields[key] !== undefined && this.shouldShowField(key)) {
               patch[key] = extractedFields[key];
               filledCount++;
             }
@@ -1566,6 +1850,7 @@ ${automatedSummary}`;
     if (confirm(`Are you sure you want to delete the report "${report.fileName}"? This action cannot be undone.`)) {
       this.reportService.deleteReport(report.id).subscribe({
         next: () => {
+          this.allDoctorReports = this.allDoctorReports.filter(r => r.id !== report.id);
           this.patientReports = this.patientReports.filter(r => r.id !== report.id);
           alert('Report deleted successfully.');
         },

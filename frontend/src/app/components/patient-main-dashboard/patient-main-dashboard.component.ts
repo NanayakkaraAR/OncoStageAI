@@ -39,6 +39,7 @@ export class PatientMainDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.currentUser = this.authService.currentUser$;
+    // Alternatively, if it's an Observable:
     this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
     });

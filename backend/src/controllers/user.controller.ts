@@ -13,14 +13,14 @@ export const getUserSettings = async (req: Request, res: Response) => {
         email: true,
         firstName: true,
         lastName: true,
-        phoneNumber: true,
-        address: true,
-        emailNotifications: true,
-        smsNotifications: true,
-        predictionAlerts: true,
-        doctorFeedback: true,
-        weeklyReports: true,
-        systemUpdates: true,
+  phoneNumber: true,
+  address: true,
+  emailNotifications: true,
+  smsNotifications: true,
+  predictionAlerts: true,
+  doctorFeedback: true,
+  weeklyReports: true,
+  systemUpdates: true,
       },
     });
 
@@ -38,7 +38,7 @@ export const getUserSettings = async (req: Request, res: Response) => {
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
-    const { firstName, lastName, email, phoneNumber, address } = req.body;
+  const { firstName, lastName, email, phoneNumber, address } = req.body;
 
     if (!firstName || !lastName || !email) {
       return res.status(400).json({ message: 'First name, last name, and email are required.' });
@@ -69,16 +69,16 @@ export const updateProfile = async (req: Request, res: Response) => {
 export const updateNotifications = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
-    const { 
-      emailNotifications, 
-      smsNotifications, 
-      predictionAlerts, 
-      doctorFeedback, 
-      weeklyReports, 
-      systemUpdates 
+    const {
+      emailNotifications,
+      smsNotifications,
+      predictionAlerts,
+      doctorFeedback,
+      weeklyReports,
+      systemUpdates,
     } = req.body;
 
-    const updatedUser = await prisma.user.update({
+    await prisma.user.update({
       where: { id: userId },
       data: {
         emailNotifications: Boolean(emailNotifications),
