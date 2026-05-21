@@ -14,4 +14,8 @@ export class AiChatService {
   sendMessage(message: string, chatHistory: any[]): Observable<any> {
     return this.http.post<any>(this.apiUrl, { message, chatHistory });
   }
+
+  textToSpeech(text: string, language: string = 'en-US'): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/tts`, { text, language });
+  }
 }

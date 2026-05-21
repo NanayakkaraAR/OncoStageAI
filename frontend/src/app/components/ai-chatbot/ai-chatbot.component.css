@@ -226,6 +226,66 @@
   cursor: not-allowed;
 }
 
+/* Voice Input Button */
+.voice-input-btn {
+  background: #f3f4f6;
+  color: #6366f1;
+  border: 1px solid #e5e7eb;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.voice-input-btn:hover {
+  background: #e5e7eb;
+  border-color: #6366f1;
+}
+
+.voice-input-btn.listening {
+  background: #fca5a5;
+  color: white;
+  border-color: #f43f5e;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7); }
+  50% { box-shadow: 0 0 0 8px rgba(244, 63, 94, 0); }
+}
+
+/* Voice Output Button */
+.voice-btn {
+  background: none;
+  border: none;
+  color: #6366f1;
+  cursor: pointer;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: all 0.2s;
+}
+
+.voice-btn:hover {
+  opacity: 1;
+  color: #4f46e5;
+  transform: scale(1.2);
+}
+
+.message-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  gap: 8px;
+}
+
 /* Typing Indicator */
 .typing-indicator {
   display: flex;

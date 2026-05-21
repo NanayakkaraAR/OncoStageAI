@@ -25,10 +25,23 @@
     </div>
 
     <div class="chat-messages">
-      <div *ngFor="let msg of messages" class="message-wrapper" [class.user]="msg.sender === 'user'">
+      <div *ngFor="let msg of messages; let i = index" class="message-wrapper" [class.user]="msg.sender === 'user'">
         <div class="message-bubble">
           <div class="message-text" [innerHTML]="msg.text"></div>
-          <div class="message-time">{{ msg.timestamp | date:'shortTime' }}</div>
+          <div class="message-actions">
+            <div class="message-time">{{ msg.timestamp | date:'shortTime' }}</div>
+            <button 
+              *ngIf="msg.sender === 'ai'" 
+              class="voice-btn" 
+              [class.playing]="playingAudioIndex === i"
+              [disabled]="playingAudioIndex === i"
+              (click)="playVoice(i)" 
+              title="Play audio"
+            >
+              <svg *ngIf="playingAudioIndex !== i" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+              <span *ngIf="playingAudioIndex === i" class="spinner">⏳</span>
+            </button>
+          </div>
         </div>
       </div>
       <div *ngIf="isLoading" class="message-wrapper">
@@ -48,6 +61,14 @@
         placeholder="Ask about cancer, symptoms, or research..."
         [disabled]="isLoading"
       >
+      <button 
+        class="voice-input-btn" 
+        [class.listening]="isListening"
+        (click)="isListening ? stopListening() : startListening()"
+        title="Click to speak"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v12a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+      </button>
       <button class="send-btn" (click)="sendMessage()" [disabled]="!userInput.trim() || isLoading">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
       </button>

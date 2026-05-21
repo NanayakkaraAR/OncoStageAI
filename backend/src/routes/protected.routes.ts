@@ -9,6 +9,7 @@ import { getUserSettings, updateProfile, updateNotifications, changePassword } f
 import { uploadReport, getPatientReports, getDoctorReports, getAllDoctorReports, parseReport, getReportFile, deleteReport, updateReportStatus } from '../controllers/report.controller';
 import { getAIResponse } from '../controllers/ai-chat.controller';
 import { submitReview } from '../controllers/review.controller';
+import { textToSpeech } from '../controllers/tts.controller';
 
 
 
@@ -160,6 +161,7 @@ router.get('/doctor-admin/users',
 );
 
 router.post('/ai-chat', authenticateToken, getAIResponse);
+router.post('/ai-chat/tts', authenticateToken, textToSpeech);
 router.post('/reviews', authenticateToken, authorizeRoles('PATIENT'), submitReview);
 
 export default router;
