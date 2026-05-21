@@ -1,15 +1,17 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { PredictionService } from '../../services/prediction.service';
 import { LoginRequest, RegisterRequest } from '../../models/auth.model';
+import { TranslationService, Language } from '../../services/translation.service';
+import { TranslatePipe } from '../../pipes/translate.pipe';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
@@ -27,15 +29,34 @@ export class LoginComponent {
   showForgotPasswordModal = signal(false);
   forgotPasswordEmail = '';
   forgotPasswordMessage = signal('');
+  currentLanguage: Language = 'en';
+  availableLanguages: Array<{code: Language; name: string}> = [];
 
   constructor(
     private authService: AuthService,
     private predictionService: PredictionService,
-    private router: Router
-  ) {}
+    private router: Router,
+    private translationService: TranslationService,
+    private cdr: ChangeDetectorRef
+  ) {
+    this.currentLanguage = this.translationService.getLanguage();
+    this.availableLanguages = this.translationService.getAvailableLanguages();
+  }
 
   togglePasswordVisibility(): void {
     this.showPassword.set(!this.showPassword());
+  }
+
+  changeLanguage(language: Language): void {
+    this.translationService.setLanguage(language);
+    this.currentLanguage = language;
+    this.cdr.markForCheck();
+  }
+
+  ngOnInit(): void {
+    this.translationService.currentLanguage$.subscribe(() => {
+      this.cdr.markForCheck();
+    });
   }
 
   openForgotPasswordModal(): void {

@@ -1,6 +1,11 @@
 import { Request, Response } from 'express';
+import Groq from 'groq-sdk';
 
-// Comprehensive knowledge base for cancer-related questions
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+});
+
+// Comprehensive knowledge base for cancer-related questions (fallback)
 const knowledgeBase: { [key: string]: string } = {
   'lung cancer': 'Lung cancer is a disease in which malignant cells form in the tissues of the lungs. It\'s the leading cause of cancer deaths worldwide. Early detection through screening is important. Main types include small cell lung cancer (SCLC) and non-small cell lung cancer (NSCLC). Adenocarcinoma is the most common type of lung cancer.',
   'non-small cell lung cancer': 'Non-small cell lung cancer (NSCLC) accounts for about 85% of lung cancers. Subtypes include adenocarcinoma (develops in mucus-secreting cells), squamous cell carcinoma (develops in thin, flat cells), and large cell carcinoma (grows and spreads rapidly). NSCLC generally grows more slowly than small cell lung cancer.',
@@ -88,11 +93,72 @@ export const getAIResponse = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
+    if (!process.env.GROQ_API_KEY) {
+      console.error('GROQ_API_KEY is not set');
+      return res.status(500).json({ error: 'AI service is not configured' });
+    }
+
     console.log('User message:', message);
     
-    const responseText = getCancerResponse(message);
+    // Check if the message is related to cancer
+    const cancerKeywords = [
+      'cancer', 'tumor', 'lung', 'oncology', 'chemotherapy', 'radiation', 'treatment',
+      'carcinoma', 'malignant', 'biopsy', 'metastasis', 'stage', 'symptom', 'diagnosis',
+      'survival', 'prognosis', 'screening', 'ct scan', 'mri', 'pet scan', 'immunotherapy',
+      'targeted therapy', 'surgery', 'remission', 'relapse', 'oncologist', 'pathology',
+      'node', 'resection', 'ablation', 'lymph', 'hormone', 'palliative', 'clinical trial',
+      'clinical', 'therapy', 'medical', 'health', 'disease', 'condition', 'patient',
+      'medication', 'drug', 'treatment', 'pain', 'fatigue', 'nausea', 'hair loss',
+      'side effects', 'prognosis', 'staging', 'adenocarcinoma', 'sclc', 'nsclc',
+      'egfr', 'alk', 'mutation', 'biomarker', 'resectable', 'inoperable', 'metastatic',
+      'remission', 'recurrence', 'cure', 'heal'
+    ];
     
-    console.log('Response generated successfully');
+    const lowerMessage = message.toLowerCase();
+    const isCancerRelated = cancerKeywords.some(keyword => lowerMessage.includes(keyword));
+    
+    if (!isCancerRelated) {
+      const responseText = 'I appreciate your question, but I\'m specifically designed to answer questions related to cancer, oncology, and cancer treatment. Could you please rephrase your question to focus on cancer-related topics? I can help with information about lung cancer types, symptoms, treatments, prevention, screening, prognosis, and survivorship. For other topics, please consult appropriate resources.';
+      console.log('Non-cancer related question detected');
+      return res.json({ response: responseText });
+    }
+    
+    // Build messages array for Groq, maintaining chat history
+    // Groq only supports 'user' and 'assistant' roles
+    const messages: Array<{role: 'user' | 'assistant', content: string}> = [];
+    
+    // Add chat history if provided
+    if (chatHistory && Array.isArray(chatHistory)) {
+      for (const msg of chatHistory) {
+        const role = msg.role === 'assistant' ? 'assistant' : 'user';
+        const content = msg.parts?.[0]?.text || msg.content || '';
+        if (content.trim()) {
+          messages.push({
+            role: role,
+            content: content
+          });
+        }
+      }
+    }
+    
+    // Add current user message with system context
+    const userMessageWithContext = `You are a helpful medical information assistant specialized in cancer care and lung cancer. Provide accurate, compassionate, and evidence-based information about cancer types, symptoms, treatments, prevention, and survivorship. Always encourage patients to consult with healthcare professionals for personalized medical advice.\n\nUser question: ${message}`;
+    
+    messages.push({
+      role: 'user',
+      content: userMessageWithContext
+    });
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages: messages,
+      model: 'llama-3.3-70b-versatile',
+      temperature: 0.7,
+      max_tokens: 1024,
+    });
+
+    const responseText = chatCompletion.choices[0]?.message?.content || 'I apologize, but I could not generate a response. Please try again.';
+    
+    console.log('Response generated successfully via Groq');
     res.json({ response: responseText });
   } catch (error: any) {
     console.error('AI Chat Error Details:', error);
