@@ -8,3 +8,5 @@ pyarrow==14.0.1
 pytesseract==0.3.10
 pdf2image==1.17.0
 python-multipart==0.0.9
+pypdf>=4.0.0
+pdfplumber>=0.10.0
